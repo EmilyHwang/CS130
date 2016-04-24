@@ -62,6 +62,6 @@ class YoutubeCrawler:
 		self.driver.quit()
 
 if __name__ == "__main__":
-	y = YoutubeCrawler(sys.argv[1], 0)
+	y = YoutubeCrawler(sys.argv[1], sys.argv[2])
 	y.crawl()
 	y.quit()

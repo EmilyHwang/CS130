@@ -53,3 +53,19 @@ You only need to do the setup once. Subsequently, to run Beehive, the workflow i
 2. Make edits/work on code/run Beehive: `python beehive.py`
 
 3. Deactivatr virtual environment: `deactivate`
+
+## Running Youtube Crawler
+
+1.) Running the command with hashtag
+```
+cd youtube_crawler
+./youtube_helper [search_keyword] [7|1|0] 
+```
+The search keyword is the hashtag with/without '#'
+The second parameter is the time frame. 
+If you want to do the last week, then 7 (by view count)
+If you want to search from today, then 1 (by view count)
+If you want to just search by relevance, then 0
+ 
+2.) View Result
+The result is in youtube_output.csv file, sorted by followers count
