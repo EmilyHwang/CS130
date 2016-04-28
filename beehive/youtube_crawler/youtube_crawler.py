@@ -10,6 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from pyvirtualdisplay import Display
 
 class YoutubeCrawler:
 	def __init__(self, hashtag, timeFrame):
@@ -23,8 +24,9 @@ class YoutubeCrawler:
 			self.timeframeURL = "CAA%253D" # by relevance
 		self.driver = webdriver.Chrome(executable_path=r"/Users/IreneY/Library/chromedriver")
 
-
 	def crawl(self):
+		display = Display(visible=0, size=(800, 600))
+		display.start()
 		for i in range(0,10):
 			self.driver.get("https://www.youtube.com/results?search_query=" + self.query + "&sp=" + self.timeframeURL + "&page=" + str(i+1))
 			
