@@ -49,6 +49,7 @@ pip freeze > requirements.txt
 You only need to do the setup once. Subsequently, to run Beehive, the workflow is as follows:
 
 1. While in the `CS130/beehive` directory, activate the virtual environment: `source venv/bin/activate`
+Windows: 'source venv/Scripts/activate'
 
 2. Make edits/work on code/run Beehive: `python beehive.py`
 

@@ -18,10 +18,10 @@ consumer_secret = ""
 
 MAX_TWEETS = 100
 MIN_NUM_OF_FOLLOWERS = 500
-MIN_INFLUENCER_LIST = 50
-MAX_USER_TIMELINE_TWEETS = 1000
+MIN_INFLUENCER_LIST = 20
+MAX_USER_TIMELINE_TWEETS = 200
 
-initial_query = sys.argv[1]
+#initial_query = sys.argv[1]
 #-----------------------------------------------------------------------
 # authenticate API
 #-----------------------------------------------------------------------
@@ -41,7 +41,7 @@ api = API(auth)
 # https://dev.twitter.com/docs/api/1/get/search
 #-----------------------------------------------------------------------
 def query_search(query):
-	data = Cursor(api.search, q=query, result_type="mixed", count=100).items(MAX_TWEETS)
+	data = Cursor(api.search, q=query, result_type="popular", count=100).items(MAX_TWEETS)
 
 	query_results = []
 	for tweet in data:
@@ -206,6 +206,8 @@ def find_potential_influencers(potential_influencers, queries):
 			#find_potential_influencers(potential_influencers, related_hashtags)
 	
 #Main method
-potential_influencers = {}
-find_potential_influencers(potential_influencers, [initial_query])
-print "Number of Influencers: " + str(len(potential_influencers))
+def search_twitter(query):
+	potential_influencers = {}
+	find_potential_influencers(potential_influencers, [query])
+	print "Number of Influencers: " + str(len(potential_influencers))
+	return potential_influencers
