@@ -1,4 +1,5 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+import twitter
 
 # Configurations
 DEBUG = True
@@ -21,12 +22,15 @@ def index():
     data = {}
     return render_template('index.html', data=data)
 
-
-@app.route('/search')
+@app.route('/search', methods=['POST'])
 def search():
-    data = {}
-    return render_template('search.html', data=data)
-
+	if request.method == 'POST':
+		searchword = request.form['searchterm']
+		potential_influencers = twitter.search_twitter(searchword)
+		return render_template('search_result.html', potential_influencers=potential_influencers)
+	else: 
+		data = {}
+		return render_template('search.html', data=data)
 
 @app.route('/about')
 def about():
