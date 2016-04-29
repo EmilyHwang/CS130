@@ -29,18 +29,32 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-5.) Now Beehive is ready to be run.
+5.) Set up environment variable permanently
+You will need the access token and the secret keys to run the script now. Add the following line to your ~/.bash_profile file
+```
+export ACCESS_TOKEN="[ACCESS_TOKEN]"
+export ACCESS_TOKEN_SECRET="[ACCESS_TOKEN_SECRET]"
+export CONSUMER_KEY="CONSUMER_KEY"
+export CONSUMER_SECRET="CONSUMER_SECRET"
+```
+Restart the terminal and do 
+```
+echo $ACCESS_TOKEN
+```
+This should output your key
+
+6.) Now Beehive is ready to be run.
 ```
 cd app
 python beehive.py
 ```
 
-6.) When you are done working in the virtual environment, deactivate it:
+7.) When you are done working in the virtual environment, deactivate it:
 ```
 deactivate
 ```
 
-7.) If you install any new packages, please make sure to do a:
+8.) If you install any new packages, please make sure to do a:
 ```
 pip freeze > requirements.txt
 ```
