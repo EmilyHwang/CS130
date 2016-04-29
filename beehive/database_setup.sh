@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Clean up data
 echo "Dropping old data..."
@@ -10,16 +10,20 @@ mysql < create.sql
 
 # Populating table 'Categories'
 echo "Populating Categories table..."
-mysql beehive -e "LOAD DATA INFILE '/Users/IreneY/Desktop/cs130/CS130/beehive/data/twitter_categories.csv' INTO TABLE Categories FIELDS TERMINATED BY ',';"
+mysql beehive -e "LOAD DATA INFILE '/Users/IreneY/Desktop/cs130/CS130/beehive/data/twitter_categories.csv' INTO TABLE Categories FIELDS TERMINATED BY ','"
 
-# Populaing table 'SubCategoryPeople'
+# Populating table 'SubCategoryPeople'
 echo "Populating SubCategoryPeople table..."
-IFS=,
 for f in ./data/category_people/*
 do
+	echo "Processing file "$f
 	subcatid=`basename $f .csv`
-	while read column1 column2
+	while IFS='@' read col1 col2
 	do
-		mysql beehive -e "INSERT INTO SubCategoryPeople (subCategoryId, username, fullname) VALUES (\""$subcatid\"", \""$column2"\", \""$column1"\");"
+		if [[ ${col2} != "" ]]
+			then
+			statement='INSERT INTO SubCategoryPeople (subCategoryId, username, fullname) VALUES ("'$subcatid'", "'${col2}'", "'${col1%?}'")'
+			mysql beehive -e "${statement}"
+		fi
 	done < $f
 done
