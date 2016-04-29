@@ -4,6 +4,7 @@ from tweepy import *
 import json
 import sys
 import time
+import os
 
 from collections import Counter
 
@@ -11,10 +12,10 @@ from collections import Counter
 # API credentials and other global variables
 # Limits on API 45000 tweets to grab, 3200 tweets per user --> 16 users to list, 1000 tweets --> 60 users
 #-----------------------------------------------------------------------
-access_token = ""
-access_token_secret = ""
-consumer_key = ""
-consumer_secret = ""
+access_token = os.environ['ACCESS_TOKEN']
+access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
+consumer_key = os.environ['CONSUMER_KEY']
+consumer_secret = os.environ['CONSUMER_SECRET']
 
 MAX_TWEETS = 100
 MIN_NUM_OF_FOLLOWERS = 500
@@ -41,7 +42,7 @@ api = API(auth)
 # https://dev.twitter.com/docs/api/1/get/search
 #-----------------------------------------------------------------------
 def query_search(query):
-	data = Cursor(api.search, q=query, result_type="popular", count=100).items(MAX_TWEETS)
+	data = Cursor(api.search, q=query, result_type="mixed", count=100).items(MAX_TWEETS)
 
 	query_results = []
 	for tweet in data:
