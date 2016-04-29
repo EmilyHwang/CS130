@@ -45,6 +45,26 @@ deactivate
 pip freeze > requirements.txt
 ```
 
+## Import data to MySQL
+There are several data files inside beehive/data directory. In order to get it on your machine, make sure that you have mysql install. 
+
+1. If you don't have a mysql config file, please create one
+```
+vi ~/.my.cnf 
+```
+Insert the following line with your mysql user and password
+```
+[client]
+user=root
+password=[your password]
+```
+
+2. After this, go to the beehive directory and run
+```
+./database_setup.sh
+```
+This will create a database (beehive), two tables, and populate the tables with data from the data/ directory
+
 ## Running Beehive
 You only need to do the setup once. Subsequently, to run Beehive, the workflow is as follows:
 
