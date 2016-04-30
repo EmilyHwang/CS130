@@ -212,3 +212,22 @@ def search_twitter(query):
 	find_potential_influencers(potential_influencers, [query])
 	print "Number of Influencers: " + str(len(potential_influencers))
 	return potential_influencers
+
+#-----------------------------------------------------------------------
+# searches users - get most recent status
+# parameters: list of users as screen_names
+# returns: [full name, status]
+#-----------------------------------------------------------------------	
+def get_users_info(usernames):
+	users_results = api.lookup_users(screen_names=usernames)
+	return users_results
+	# users_to_display = {}
+	
+	## convert from json
+	# users_data = []
+	# for user in users_results:
+		# users_data.append(json.loads(json.dumps(user._json)))
+	
+	# for user in users_data:
+		# users_to_display[user['screen_name']] = [user['name'], user['status']]
+	# return users_to_display

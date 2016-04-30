@@ -10,7 +10,7 @@ mysql < create.sql
 
 # Populating table 'Categories'
 echo "Populating Categories table..."
-mysql beehive -e "LOAD DATA INFILE '/Users/IreneY/Desktop/cs130/CS130/beehive/data/twitter_categories.csv' INTO TABLE Categories FIELDS TERMINATED BY ','"
+mysql beehive -e "LOAD DATA LOCAL INFILE './data/twitter_categories.csv' INTO TABLE Categories FIELDS TERMINATED BY ','"
 
 # Populating table 'SubCategoryPeople'
 echo "Populating SubCategoryPeople table..."
