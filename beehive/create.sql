@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS SubCategoryPeople(
 	fullname VARCHAR(50)
 );
 
+CREATE TABLE IF NOT EXISTS Hashtags(
+	hashtag VARCHAR(50),
+	lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	timeSearched INT
+);
+
 # The default encoding for mysql is latin1. We want utf-8 encoding
 SET foreign_key_checks = 0; 
 ALTER TABLE Categories CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci; 
