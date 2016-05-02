@@ -105,7 +105,7 @@ If you want to just search by relevance, then 0
 2.) View Result
 The result is in youtube_output.csv file, sorted by followers count
 
-### Setting up Cassandra (Mac)
+## Setting up Cassandra (Mac)
 
 1.) In the beehive directory, activate the virtualenv
 ```
