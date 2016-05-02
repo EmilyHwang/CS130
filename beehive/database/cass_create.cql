@@ -1,7 +1,7 @@
-Use Beehive;
-
 CREATE KEYSPACE Beehive 
    with replication =  { 'class' : 'SimpleStrategy', 'replication_factor' : 2 };
+
+Use Beehive;
 
 CREATE TABLE Users (
 	username text,
