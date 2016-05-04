@@ -10,7 +10,7 @@ $ pip install virtualenv
 2.) Then change into the `/CS130/beehive` folder to create a virtual environment for Beehive:
 ```
 $ cd CS130/beehive
-$ virtualenv venv
+$ virtualenv --system-site-packages venv
 ```
 
 You should now have a `venv` folder inside the `beehive` folder. Make sure that your virtual environment uses Python 2.7 (you will see the Python version when this line is output `New python executable in...`). If not, remove the `venv` folder and use Python 2.7:

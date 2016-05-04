@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import twitter
+import rand_influencers
 
 # Configurations
 DEBUG = True
