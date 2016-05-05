@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import twitter
 import rand_influencers
+import pdb
 
 # Configurations
 DEBUG = True
@@ -23,15 +24,25 @@ def index():
     data = {}
     return render_template('index.html', data=data)
 
+
 @app.route('/search', methods=['POST'])
 def search():
-	if request.method == 'POST':
-		searchword = request.form['searchterm']
-		potential_influencers = twitter.search_twitter(searchword)
-		return render_template('search_result.html', potential_influencers=potential_influencers)
-	else: 
-		data = {}
-		return render_template('search.html', data=data)
+    if request.method == 'POST':
+
+        query = request.form['user-input']
+
+        potential_influencers = twitter.search_twitter(query)
+
+        return render_template('search_results.html', query=query, potential_influencers=potential_influencers)
+
+    else:
+        return redirect('/search-page')
+
+
+@app.route('/search-page')
+def search_page():
+    return render_template('search_page.html')
+
 
 @app.route('/about')
 def about():
