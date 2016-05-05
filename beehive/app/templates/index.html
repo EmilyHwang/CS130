@@ -18,34 +18,40 @@
 
 {% block content %}
 <br><br>
-<div class="container">
+
 	{% for row in users | batch(3) %}
-	<div class="row flex">
+	<div class="row">
 		{% for user in row %}
-		<div class="col-sm-4 col-md-4 col-lg-4">
-		<div class="panel panel-default text-left">
-			<div class="panel-heading">
-				<div class="row">
-					<div class="col-sm-2 col-md-2 col-lg-2">
-						<img src={{ user['profile_image_url'] }} alt="">
-					</div>
-					<div class="col-sm-10 col-md-10 col-lg-10">
-						<h3>@{{ user['screen_name'] }}</h3>
-						<small><em><strong>{{ user['name'] }}</strong></em></small>
-					</div>
-				</div> <!-- end class="row" -->
-			</div> <!-- end class="panel-heading" -->
-			<div class="panel-body">
-				{{ user['status']['text'] }}
-			</div>
-			<div class="panel-footer text-right">
-				<span class="glyphicon glyphicon-retweet"></span>&nbsp;{{ user['status']['retweet_count'] }}&nbsp;
-				<span class="glyphicon glyphicon-heart"></span>&nbsp;{{ user['status']['favorite_count'] }}
-			</div>
-		</div></div>
-	{% endfor %}
+            <div class="col-sm-4 col-md-4 col-lg-4">
+                <div class="panel panel-default text-left">
+
+                    <!-- (1) heading -->
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-sm-2 col-md-2 col-lg-2">
+                                <img src={{ user['profile_image_url'] }} alt="">
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                <h3>@{{ user['screen_name'] }}</h3>
+                                <small><em><strong>{{ user['name'] }}</strong></em></small>
+                            </div>
+                        </div> <!-- end class="row" -->
+                    </div>
+
+                    <!-- (2) body -->
+                    <div class="panel-body">
+                        {{ user['status']['text'] }}
+                    </div>
+
+                    <!-- (3) footer -->
+                    <div class="panel-footer text-right">
+                        <span class="glyphicon glyphicon-retweet"></span>&nbsp;{{ user['status']['retweet_count'] }}&nbsp;
+                        <span class="glyphicon glyphicon-heart"></span>&nbsp;{{ user['status']['favorite_count'] }}
+                    </div>
+                </div>
+            </div>
+	    {% endfor %}
 	</div>
 	{% endfor %}
-</div>
 
 {% endblock content %}
