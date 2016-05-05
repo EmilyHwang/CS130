@@ -1,22 +1,52 @@
 {% extends "base.html" %}
 {% block title %} Home Page {% endblock title %}
 {% block styles %}
-    {# Custom CSS styles for index.html #}
-    <style>
+	{# Custom CSS styles for index.html #}
+	<style>
 
-    </style>
+	</style>
 {% endblock styles %}
 
 {% block page_description %}
-    <div class="row">
-        <h1>Social Media Analytics for Everyone</h1>
+	<div class="row">
+		<h1>Social Media Analytics for Everyone</h1>
 
-        <p class="lead">
-            Blah blah.
-        </p>
-    </div>
+		<p class="lead">
+			Blah blah.
+		</p>
+	</div>
 {% endblock page_description %}
 
 {% block content %}
+<br><br>
+<div class="container">
+	{% for row in users | batch(3) %}
+	<div class="row flex">
+		{% for user in row %}
+		<div class="col-sm-4 col-md-4 col-lg-4">
+		<div class="panel panel-default text-left">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-sm-2 col-md-2 col-lg-2">
+						<img src={{ user['profile_image_url'] }} alt="">
+					</div>
+					<div class="col-sm-10 col-md-10 col-lg-10">
+						<h3>@{{ user['screen_name'] }}</h3>
+						<small><em><strong>{{ user['name'] }}</strong></em></small>
+					</div>
+				</div> <!-- end class="row" -->
+			</div> <!-- end class="panel-heading" -->
+			<div class="panel-body">
+				{{ user['status']['text'] }}
+			</div>
+			<div class="panel-footer text-right">
+				<span class="glyphicon glyphicon-retweet"></span>&nbsp;{{ user['status']['retweet_count'] }}&nbsp;
+				<span class="glyphicon glyphicon-heart"></span>&nbsp;{{ user['status']['favorite_count'] }}
+			</div>
+		</div></div>
+	{% endfor %}
+	</div>
+	{% endfor %}
+</div>
 
 {% endblock content %}
