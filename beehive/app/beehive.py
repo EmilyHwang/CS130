@@ -34,6 +34,7 @@ def search():
         query = request.form['user-input']
         potential_influencers = twitter.search_twitter(query)
         return render_template('search_results.html', query=query, potential_influencers=potential_influencers)
+
     else:
         return redirect('/search-page')
 
@@ -41,6 +42,7 @@ def search():
 @app.route('/search-page')
 def search_page():
     return render_template('search_page.html')
+
 
 '''
 @app.route('/search', methods=['POST', 'GET'])
@@ -53,6 +55,7 @@ def search():
         data = {}
         return render_template('search.html', data=data)
 '''
+
 
 @app.route('/about')
 def about():
