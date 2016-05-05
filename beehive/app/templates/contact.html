@@ -7,6 +7,10 @@
     </style>
 {% endblock styles %}
 
+{% block head %}
+
+{% endblock head %}
+
 {% block page_description %}
     <div class="row">
         <h1>Contact Page</h1>
@@ -17,5 +21,8 @@
 {% endblock page_description %}
 
 {% block content %}
-
+    <script>
+        console.log('reaches here');
+        activateNavBar('#nav-contact');
+    </script>
 {% endblock content %}

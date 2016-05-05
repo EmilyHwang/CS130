@@ -7,6 +7,10 @@
     </style>
 {% endblock styles %}
 
+{% block head %}
+
+{% endblock head %}
+
 {% block page_description %}
     <div class="row">
         <h1>Search Page</h1>
@@ -17,5 +21,7 @@
 {% endblock page_description %}
 
 {% block content %}
-
+    <script>
+        activateNavBar('#nav-search');
+    </script>
 {% endblock content %}
