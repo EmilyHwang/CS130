@@ -27,12 +27,14 @@ def index():
     return render_template('index.html', users=users)
 
 
-
 @app.route('/search', methods=['POST'])
 def search():
     if request.method == 'POST':
         query = request.form['user-input']
         potential_influencers = twitter.search_twitter(query)
+
+        # user_data = twitter.get_users_info(potential_influencers.keys())
+
         return render_template('search_results.html', query=query, potential_influencers=potential_influencers)
 
     else:

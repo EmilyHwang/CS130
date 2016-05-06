@@ -7,6 +7,15 @@
     </style>
 {% endblock styles %}
 
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+
+    <!-- Include Data Tables plugin
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/bs/jszip-2.5.0,pdfmake-0.1.18,dt-1.10.11,b-1.1.2,b-flash-1.1.2,b-html5-1.1.2,b-print-1.1.2,fh-3.1.1,r-2.0.2,sc-1.4.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/t/bs/jszip-2.5.0,pdfmake-0.1.18,dt-1.10.11,b-1.1.2,b-flash-1.1.2,b-html5-1.1.2,b-print-1.1.2,fh-3.1.1,r-2.0.2,sc-1.4.1/datatables.min.js"></script>
+    -->
+{% endblock head %}
+
 {% block page_description %}
     <div class="row">
         <h1>Search Results for:</h1>
@@ -30,6 +39,7 @@
                             <th class="text-center"># of Statuses</th>
                             <th class="text-center">Avg # of Favorites</th>
                             <th class="text-center">Avg # of Retweets</th>
+                            <th class="text-center">Influencer Ranking</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,4 +61,8 @@
             </p>
         </div>
     {% endif %}
+
+    <script>
+        activateNavBar('#nav-search');
+    </script>
 {% endblock content %}
