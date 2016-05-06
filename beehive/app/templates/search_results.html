@@ -43,12 +43,14 @@
                         </tr>
                     </thead>
                     <tbody>
+                    {% set i = 0 %}
                     {% for influencer in potential_influencers %}
                         <tr>
-                            <td class="text-center">{{ influencer }}</td>
+                            <td class="text-center"><a href="{{ links[i] }}">{{ influencer }}</a></td>
                             {% for stat in potential_influencers[influencer] %}
                                 <td class="text-center">{{ stat }}</td>
                             {% endfor %}
+                            {% set i = i + 1 %}
                         </tr>
                     {% endfor %}
                 </table>

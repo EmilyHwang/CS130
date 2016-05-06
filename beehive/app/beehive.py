@@ -33,9 +33,11 @@ def search():
         query = request.form['user-input']
         potential_influencers = twitter.search_twitter(query)
 
-        # user_data = twitter.get_users_info(potential_influencers.keys())
+        links = []
+        for name in potential_influencers:
+            links.append('https://twitter.com/' + name)
 
-        return render_template('search_results.html', query=query, potential_influencers=potential_influencers)
+        return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
 
     else:
         return redirect('/search-page')
