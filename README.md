@@ -88,7 +88,17 @@ password=[your password]
 ```
 This will create a database (beehive), two tables, and populate the tables with data from the data/ directory
 
-## Running Youtube Crawler
+## Running Beehive
+You only need to do the setup once. Subsequently, to run Beehive, the workflow is as follows:
+
+1. While in the `CS130/beehive` directory, activate the virtual environment: `source venv/bin/activate`
+Windows: 'source venv/Scripts/activate'
+
+2. Make edits/work on code/run Beehive: `python beehive.py`
+
+3. Deactivate virtual environment: `deactivate`
+
+## Running Youtube Crawler (No need for now. Need chrome executable and change path to work)
 
 1.) Running the command with hashtag
 ```
@@ -103,3 +113,60 @@ If you want to just search by relevance, then 0
  
 2.) View Result
 The result is in youtube_output.csv file, sorted by followers count
+
+## Setting up Cassandra (Mac)
+
+1.) In the beehive directory, activate the virtualenv
+```
+source venv/bin/activate
+```
+
+2.) Run the install script (Java 1.7 or 1.8 must be installed)
+```
+bash ccm_install.sh
+```
+
+3.) Check if there are three nodes running
+```
+ccm status
+```
+You should see the following outputs
+```
+Cluster: 'test'
+---------------
+node1: UP
+node3: UP
+node2: UP
+```
+
+4.) Now we can create keyspace and tables inside the Cassandra clusters
+Run the following command to set up your database
+```
+bash cass_database_setup.sh
+```
+
+5.) Commands to try in Cassandra 
+To connect to the local Cassandra cluster
+```
+ccm node1 cqlsh
+```
+
+To show all keyspaces (this is like database in MySQL)
+```
+desc KEYSPACES
+```
+
+To use a certain KEYSPACE
+``` 
+Use [Keyspace]
+```
+
+To show all tables
+```
+desc tables
+```
+
+To describe a table
+``` 
+desc table [Table name]
+```
