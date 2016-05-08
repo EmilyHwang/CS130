@@ -5,7 +5,7 @@
 	# # users_data = []
 	# # for user in users_results:
 		# # users_data.append(json.loads(json.dumps(user._json)))
-	
+
 	# # for user in users_data:
 	# #	print user['screen_name']
 # The stats I think you'll want to pay attention to
@@ -48,4 +48,4 @@ def find_users(number):
 def get_users(number):
 	users = find_users(number)
 	users_info = twitter.get_users_info(users)
-	print users_info
+	return users_info

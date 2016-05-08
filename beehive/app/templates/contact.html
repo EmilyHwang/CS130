@@ -1,22 +1,28 @@
 {% extends "base.html" %}
 {% block title %} Contact {% endblock title %}
 {% block styles %}
-    {# Custom CSS styles for index.html #}
+    {# Custom CSS styles for contact.html #}
     <style>
 
     </style>
 {% endblock styles %}
+
+{% block head %}
+
+{% endblock head %}
 
 {% block page_description %}
     <div class="row">
         <h1>Contact Page</h1>
 
         <p class="lead">
-            Blah blah.
         </p>
     </div>
 {% endblock page_description %}
 
 {% block content %}
-
+    <script>
+        console.log('reaches here');
+        activateNavBar('#nav-contact');
+    </script>
 {% endblock content %}
