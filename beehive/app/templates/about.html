@@ -1,22 +1,29 @@
 {% extends "base.html" %}
 {% block title %} About {% endblock title %}
 {% block styles %}
-    {# Custom CSS styles for index.html #}
+    {# Custom CSS styles for about.html #}
     <style>
 
     </style>
 {% endblock styles %}
+
+{% block head %}
+
+{% endblock head %}
 
 {% block page_description %}
     <div class="row">
         <h1>About Page</h1>
 
         <p class="lead">
-            Blah blah.
         </p>
     </div>
 {% endblock page_description %}
 
 {% block content %}
 
+
+    <script>
+        activateNavBar('#nav-about');
+    </script>
 {% endblock content %}

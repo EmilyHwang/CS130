@@ -1,0 +1,34 @@
+html, body {
+	padding-top: 50px;
+	height: 100%;
+}
+
+.layout-template {
+	padding: 40px 15px; text-align: center;
+}
+
+.panel > .panel-influencer {
+
+}
+
+/* flex does not work on <= IE9 */
+.flex, .flex > div[class*='col-'] {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex: 1 1 auto;
+}
+
+.panel {
+	flex: 1 0 100%;
+   display: flex;
+   flex-direction: column;
+   align-content: stretch;
+}
+
+.panel-body {
+   display: flex;
+   flex-grow: 1;
+}

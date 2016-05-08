@@ -4,19 +4,19 @@
 ## Setup
 1.) First, make sure you have `virtualenv` installed:
 ```
-$ pip install virtualenv
+pip install virtualenv
 ```
 
 2.) Then change into the `/CS130/beehive` folder to create a virtual environment for Beehive:
 ```
-$ cd CS130/beehive
-$ virtualenv venv
+cd CS130/beehive
+virtualenv --system-site-packages venv
 ```
 
-You should now have a `venv` folder inside the `beehive` folder. Make sure that your virtual environment uses Python 2.7 (you will see the Python version when this line is output `New python executable in...`). If not, remove the `venv` folder and use Python 2.7:
+Note: `--system-site-packages` is optional. By the end of this step, you should now have a `venv` folder inside the `beehive` folder. Make sure that your virtual environment uses Python 2.7 (you will see the Python version when this line is output `New python executable in...`). If not, remove the `venv` folder and use Python 2.7:
 
 ```
-$ virtualenv -p /usr/bin/python2.7 venv
+virtualenv -p /usr/bin/python2.7 venv
 ```
 
 3.) To begin using the virtual environment, activate it:
@@ -45,8 +45,7 @@ This should output your key
 
 6.) Now Beehive is ready to be run.
 ```
-cd app
-python beehive.py
+python app/beehive.py
 ```
 
 7.) When you are done working in the virtual environment, deactivate it:
@@ -58,6 +57,16 @@ deactivate
 ```
 pip freeze > requirements.txt
 ```
+
+## Running Beehive
+You only need to do the setup once. Subsequently, to run Beehive, the workflow is as follows:
+
+1. While in the `CS130/beehive` directory, activate the virtual environment: `source venv/bin/activate`
+Windows: 'source venv/Scripts/activate'
+
+2. Make edits/work on code/run Beehive: `python app/beehive.py`
+
+3. Deactivate virtual environment: `deactivate`
 
 ## Import data to MySQL
 There are several data files inside beehive/data directory. In order to get it on your machine, make sure that you have mysql install. 
@@ -87,7 +96,7 @@ Windows: 'source venv/Scripts/activate'
 
 2. Make edits/work on code/run Beehive: `python beehive.py`
 
-3. Deactivatr virtual environment: `deactivate`
+3. Deactivate virtual environment: `deactivate`
 
 ## Running Youtube Crawler (No need for now. Need chrome executable and change path to work)
 
