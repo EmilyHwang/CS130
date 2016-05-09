@@ -3,15 +3,28 @@ CREATE KEYSPACE Beehive
 
 Use Beehive;
 
+CREATE TABLE HashtagUsers (
+	hashtag text,
+	username text,
+	userRank int,
+	tweetText text,
+	tweetCreated timestamp,
+	avgLikes float,
+	avgRetweets float,
+	followers int,
+	numTweets int,
+	PRIMARY KEY (hashtag, username)
+);
+
 CREATE TABLE Users (
 	username text,
 	fullname text,
+	lastUpdated timestamp,
 	numAppeared int,
+	avgLikes float,
+	avgRetweets float,
 	followers int,
 	numTweets int,
-	numStatus int,
-	aveLikes int,
-	aveRetweets int,
-	updatedTime timestamp,
-	PRIMARY KEY (username)
+	userRank int,
+	PRIMARY KEY (username, lastUpdated)
 );
