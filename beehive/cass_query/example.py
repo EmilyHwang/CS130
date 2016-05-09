@@ -1,12 +1,12 @@
-#!/bin/env/python
+from orm import Cassandra
+import datetime
 
-from cassandra.cluster import Cluster
-from cassandra.policies import DCAwareRoundRobinPolicy
+c = Cassandra('beehive')
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# c.new_hashtag('ucla2016', 'ireneyeh', 5, 1, 100, 12, timestamp, 'today is awesome', 0)
+# c.new_hashtag('ucla2016', 'kurtisv', 6, 2, 200, 12, timestamp, 'today is awesome too', 0)
 
-cluster = Cluster(['127.0.0.3'])
-session = cluster.connect('system')
+o = c.get_hashtag('ucla2016')
 
-rows = session.execute('SELECT * from schema_keyspaces')
-
-for user_row in rows:
-	print user_row.keyspace_name
+for i in o:
+	print i
