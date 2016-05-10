@@ -40,13 +40,10 @@ class Cassandra(object):
 	# desc:		Insert a user with stats to the user table													#
 	###############################################################################
 	def new_user(self, username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank):
-		query = """
-		INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank)
-		VALUES('%s','%s','%s',%s,%s,%s,%s,%s,%s)
-		""" % \
-		  (username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank)
-		print query.encode('utf-8')
-		self.session.execute(query)
+		query = session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
+		  
+		print query
+		self.session.execute(query, [username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank])
 
 	def get_user(self,username):
 		query = "SELECT * FROM users WHERE username = '%s'" % username

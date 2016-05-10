@@ -140,11 +140,11 @@ class Search:
 			
 			cassUsers = cass.get_user(user)
 			if not cassUsers:
-				cass.new_user(user, user_info['fullname'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], 0)
+				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], 0)
 			else: # user already associated with another hashtag. need to update time appeared
 				cassUser = cass.get_most_recent_user(user)
 				updatedNumAppeared = cassUser.numappeared + 1
-				cass.new_user(user, user_info['fullname'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], 0)
+				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], 0)
 
 	# ----------------------------------------------------------------------
 	# parameters: hashtag
@@ -182,6 +182,8 @@ class Search:
 				db.rollback()
 			
 			self.__update_cassandra(potential_influencers)
+			for user in potential_influencers:
+				potential_influencers[user].update({'userRank': 0})
 		else:
 			#check timestamp
 			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	# older than one day, search twitter	
@@ -195,6 +197,8 @@ class Search:
 					db.rollback()
 					
 				self.__update_cassandra(potential_influencers)
+				for user in potential_influencers:
+					potential_influencers[user].update({'userRank': 0})
 			else: # database has updated info
 				# go to cassandra
 				print "Retrieving data from Cassandra"
@@ -202,7 +206,7 @@ class Search:
 				users = cass.get_hashtag(query)
 				if users is not None:
 					for user in users:
-						potential_influencers[user.username] = {'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets}
+						potential_influencers[user.username] = {'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets, 'userRank': user.userrank}
 				
 					#update timesearched
 					print "timesSearched: " + str(data['timeSearched'])
@@ -219,6 +223,6 @@ class Search:
 				
 	#def get_user_info(usernames):
 
-if __name__ == "__main__":
-	searcher = Search('#ucla2016')
-	searcher.search_twitter()
+# if __name__ == "__main__":
+	# searcher = Search('#ucla2016')
+	# searcher.search_twitter()
