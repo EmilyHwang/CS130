@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect
 import twitter
 import rand_influencers
 import pdb
+import categories
 
 
 # Configurations
@@ -23,8 +24,13 @@ def index():
     # 'data' is a variable that passes info to template for rendering
     # So for example, place stuff we retrieve from the database, api call, etc. into data
     #data = {}
-    users = rand_influencers.get_users(9)
-    return render_template('index.html', users=users)
+
+    #test code
+    cats = categories.getAllCategories();
+    #end test code
+
+    users = rand_influencers.get_users(3)
+    return render_template('index.html', users=users, categories=cats)
 
 
 @app.route('/search', methods=['POST'])

@@ -17,10 +17,13 @@
 {% endblock page_description %}
 
 {% block content %}
-<br><br>
+
+    <!-- (I) Trending Influencers -->
+    <span class="text-left"><h2>Trending Now</h2></span>
+    <br>
 
 	{% for row in users | batch(3) %}
-	<div class="row">
+	<div class="row flex">
 		{% for user in row %}
             <div class="col-sm-4 col-md-4 col-lg-4">
                 <div class="panel panel-default text-left">
@@ -53,5 +56,15 @@
 	    {% endfor %}
 	</div>
 	{% endfor %}
+
+    <!-- (II) Categories -->
+    <!-- TODO: make a two level menu and add event handler -->
+    <span class="text-left"><h2>Browse By Category</h2></span>
+    {% for entry in categories %}
+        <div class="text-left">
+            {{ entry['categoryName'] }} : {{ entry['subCategories'] }}
+            <br>
+        </div>
+    {% endfor %}
 
 {% endblock content %}
