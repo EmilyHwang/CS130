@@ -96,7 +96,7 @@ Windows: 'source venv/Scripts/activate'
 
 2. Make edits/work on code/run Beehive: `python beehive.py`
 
-3. Deactivatr virtual environment: `deactivate`
+3. Deactivate virtual environment: `deactivate`
 
 ## Running Youtube Crawler (No need for now. Need chrome executable and change path to work)
 

@@ -27,4 +27,4 @@ CREATE TABLE Users (
 	numTweets int,
 	userRank int,
 	PRIMARY KEY (username, lastUpdated)
-);
+) WITH CLUSTERING ORDER BY (lastUpdated DESC);
