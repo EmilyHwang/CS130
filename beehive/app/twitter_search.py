@@ -28,10 +28,10 @@ api = API(auth)
 class Search:
 
 	def __init__(self, query):
-		self.hashtag = query
+		self.hashtag = "#" + query
 	
 	def __api_query_search(self, query):
-		data = Cursor(api.search, q=query, result_type="mixed", count=100).items(MAX_TWEETS)
+		data = Cursor(api.search, q=query, result_type="recent", count=100).items(MAX_TWEETS)
 
 		query_results = []
 		for tweet in data:
@@ -87,6 +87,8 @@ class Search:
 		# extract user info once from first tweet, should be same for ALL tweets
 		if len(query_results) > 0:
 			user_info = query_results[0]['user']
+		else:
+			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 		followers_count = user_info['followers_count']
 		statuses_count = user_info['statuses_count']
 		#all_tweet_ids = {}
