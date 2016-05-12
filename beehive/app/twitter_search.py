@@ -23,7 +23,7 @@ consumer_key = os.environ['CONSUMER_KEY']
 consumer_secret = os.environ['CONSUMER_SECRET']
 
 auth = AppAuthHandler(consumer_key, consumer_secret)
-api = API(auth)
+api = API(auth, wait_on_rate_limit=True)
 
 class Search:
 
@@ -37,7 +37,7 @@ class Search:
 		for tweet in data:
 			query_results.append(json.loads(json.dumps(tweet._json)))
 		print "original query size: " + str(len(query_results))
-		return query_results
+		return query_resultsk
 	
 	# -----------------------------------------------------------------------
 	# Finds users of tweets
@@ -72,6 +72,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def __query_user_timeline(self, user):
 		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=1).items(MAX_USER_TIMELINE_TWEETS)
+
 		query_results = []
 		for tweet in data:
 			query_results.append(json.loads(json.dumps(tweet._json)))
