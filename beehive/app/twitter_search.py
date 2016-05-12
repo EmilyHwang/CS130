@@ -85,7 +85,7 @@ class Search:
 		print "Extracting user: " + user
 		query_results = self.__query_user_timeline(user)
 		# extract user info once from first tweet, should be same for ALL tweets
-		if len(query_results) > 1:
+		if len(query_results) > 0:
 			user_info = query_results[0]['user']
 		followers_count = user_info['followers_count']
 		statuses_count = user_info['statuses_count']
