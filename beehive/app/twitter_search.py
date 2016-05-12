@@ -16,6 +16,7 @@ from cassandra.policies import DCAwareRoundRobinPolicy
 
 MAX_TWEETS = 100
 MAX_USER_TIMELINE_TWEETS = 200
+MIN_NUM_OF_FOLLOWERS = 100
 
 access_token = os.environ['ACCESS_TOKEN']
 access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
@@ -37,7 +38,7 @@ class Search:
 		for tweet in data:
 			query_results.append(json.loads(json.dumps(tweet._json)))
 		print "original query size: " + str(len(query_results))
-		return query_resultsk
+		return query_results
 	
 	# -----------------------------------------------------------------------
 	# Finds users of tweets
@@ -49,20 +50,19 @@ class Search:
 		hashtags = []
 		users = {}
 		for tweet in tweets:
-			#if tweet['user']['followers_count'] > MIN_NUM_OF_FOLLOWERS:
-			
-			tweet_datetime = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
-			tweet_user = tweet['user']['screen_name']
+			if tweet['user']['followers_count'] > MIN_NUM_OF_FOLLOWERS:
+				tweet_datetime = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+				tweet_user = tweet['user']['screen_name']
 
-			#if user already exists in dict, check if datetime is more recent
-			if tweet_user not in users or (tweet_user in users and users[tweet_user]['tweetCreated'] < tweet_datetime):
-				users[tweet_user] = {'fullname': tweet['user']['name'], 'tweetText': tweet['text'], 'tweetCreated': tweet_datetime}
-			
-			mentions = tweet['entities']['user_mentions']
-			mentioned_users.extend([mention['screen_name'] for mention in mentions])
+				#if user already exists in dict, check if datetime is more recent
+				if tweet_user not in users or (tweet_user in users and users[tweet_user]['tweetCreated'] < tweet_datetime):
+					users[tweet_user] = {'fullname': tweet['user']['name'], 'tweetText': tweet['text'], 'tweetCreated': tweet_datetime}
+				
+				mentions = tweet['entities']['user_mentions']
+				mentioned_users.extend([mention['screen_name'] for mention in mentions])
 
-			hashtag_list = tweet['entities']['hashtags']
-			hashtags.extend([hashtag['text'] for hashtag in hashtag_list])
+				hashtag_list = tweet['entities']['hashtags']
+				hashtags.extend([hashtag['text'] for hashtag in hashtag_list])
 
 		return [users, set(mentioned_users), hashtags]
 	# -----------------------------------------------------------------------
