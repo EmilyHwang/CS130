@@ -7,7 +7,7 @@ import time
 import os
 import pdb
 from datetime import datetime, timedelta
-from orm import Cassandra
+from cass_orm import Cassandra
 import MySQLdb
 
 #from collections import Counter, OrderedDict

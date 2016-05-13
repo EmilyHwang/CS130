@@ -59,3 +59,8 @@ class Cassandra(object):
 		if not res:
 		  print "Could not find user: %s" % username
 		return res
+
+	def get_user_from_hashtag(self,hashtag):
+		query = "SELECT username FROM hashtagusers WHERE hashtag = '%s'" % hashtag
+		res = self.session.execute(query)
+		return res
