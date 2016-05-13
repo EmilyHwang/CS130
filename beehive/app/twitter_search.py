@@ -28,11 +28,13 @@ api = API(auth, wait_on_rate_limit=True)
 
 class Search:
 
-	def __init__(self, query):
+	def __init__(self, query, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
 		self.hashtag = "#" + query
+		self.max_tweets = max_tweets
+		self.max_user_timeline_tweets = max_user_timeline_tweets
 	
 	def __api_query_search(self, query):
-		data = Cursor(api.search, q=query, result_type="recent", count=100).items(MAX_TWEETS)
+		data = Cursor(api.search, q=query, result_type="recent", count=100).items(self.max_tweets)
 
 		query_results = []
 		for tweet in data:
@@ -71,7 +73,7 @@ class Search:
 	# returns: json
 	# -----------------------------------------------------------------------
 	def __query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=1).items(MAX_USER_TIMELINE_TWEETS)
+		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=1).items(self.max_user_timeline_tweets)
 
 		query_results = []
 		for tweet in data:
@@ -114,7 +116,7 @@ class Search:
 	# parameters: hashtag
 	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, }, user2: {}}
 	# -----------------------------------------------------------------------
-	def __search_twitter_api(self, query):
+	def search_twitter_api(self, query):
 		potential_influencers = {}
 		tweets = self.__api_query_search(query)
 		users_hashtag_list = self.__get_users_and_hashtags(tweets)
@@ -131,7 +133,7 @@ class Search:
 				potential_influencers[user] = all_info
 		return potential_influencers
 	
-	def __update_cassandra(self, potential_influencers):
+	def update_cassandra(self, potential_influencers):
 		cass = Cassandra('beehive') 
 		query = self.hashtag
 
@@ -173,7 +175,7 @@ class Search:
 		
 		if data is None: #hashtag doesn't exist, search twitter
 			print "Hashtag not found. Searching twitter"
-			potential_influencers = self.__search_twitter_api(query)
+			potential_influencers = self.search_twitter_api(query)
 			
 			# check database for user rank?
 			# for user in potential_influencers:
@@ -184,14 +186,14 @@ class Search:
 			except:
 				db.rollback()
 			
-			self.__update_cassandra(potential_influencers)
+			self.update_cassandra(potential_influencers)
 			for user in potential_influencers:
 				potential_influencers[user].update({'userRank': 0})
 		else:
 			#check timestamp
 			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	# older than one day, search twitter	
 				print "Hashtag too old. Searching twitter"
-				potential_influencers = self.__search_twitter_api(query)
+				potential_influencers = self.search_twitter_api(query)
 
 				try:
 					cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
@@ -199,7 +201,7 @@ class Search:
 				except:
 					db.rollback()
 					
-				self.__update_cassandra(potential_influencers)
+				self.update_cassandra(potential_influencers)
 				for user in potential_influencers:
 					potential_influencers[user].update({'userRank': 0})
 			else: # database has updated info
