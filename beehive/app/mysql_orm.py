@@ -18,3 +18,9 @@ class MySQL(object):
 			arr.add(i["hashtag"])
 		return arr
 
+	def updateHashtag(self, hashtag):
+		try:
+			self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, hashtag))
+			self.db.commit()
+		except:
+			self.db.rollback()
