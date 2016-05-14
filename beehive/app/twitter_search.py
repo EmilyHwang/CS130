@@ -5,9 +5,9 @@ import json
 import sys
 import time
 import os
-import pdb
 from datetime import datetime, timedelta
 from cass_orm import Cassandra
+from user_rank import UserRank
 import MySQLdb
 
 #from collections import Counter, OrderedDict
@@ -27,9 +27,9 @@ auth = AppAuthHandler(consumer_key, consumer_secret)
 api = API(auth, wait_on_rate_limit=True)
 
 class Search:
-
 	def __init__(self, query, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
-		self.hashtag = "#" + query
+		q = "#" + query
+		self.hashtag = q.lower()
 		self.max_tweets = max_tweets
 		self.max_user_timeline_tweets = max_user_timeline_tweets
 	
@@ -141,16 +141,27 @@ class Search:
 			# add to tables
 			user_info = potential_influencers[user]
 			
-			cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], 0)
+			userrank = UserRank()
+			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0)
 			
 			cassUsers = cass.get_user(user)
 			if not cassUsers:
-				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], 0)
+				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
+				
+				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank)
+				potential_influencers[user]['userRank'] = rank
+				
 			else: # user already associated with another hashtag. need to update time appeared
-				cassUser = cass.get_most_recent_user(user)
+				cassUsers = cass.get_most_recent_user(user)
+				for most_recent_user in cassUsers:
+					cassUser = most_recent_user
 				updatedNumAppeared = cassUser.numappeared + 1
-				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], 0)
-
+				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
+				
+				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank)
+				potential_influencers[user]['userRank'] = rank
+				
+		return potential_influencers
 	# ----------------------------------------------------------------------
 	# parameters: hashtag
 	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, 'userRank'}, user2: {}}
@@ -185,10 +196,8 @@ class Search:
 				db.commit()
 			except:
 				db.rollback()
-			
+
 			self.update_cassandra(potential_influencers)
-			for user in potential_influencers:
-				potential_influencers[user].update({'userRank': 0})
 		else:
 			#check timestamp
 			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	# older than one day, search twitter	
@@ -202,8 +211,6 @@ class Search:
 					db.rollback()
 					
 				self.update_cassandra(potential_influencers)
-				for user in potential_influencers:
-					potential_influencers[user].update({'userRank': 0})
 			else: # database has updated info
 				# go to cassandra
 				print "Retrieving data from Cassandra"

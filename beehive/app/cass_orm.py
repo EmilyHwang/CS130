@@ -31,6 +31,15 @@ class Cassandra(object):
 			return None
 		else:
 			return res
+			
+	def get_all_hashtags(self):
+		query = "SELECT DISTINCT hashtag FROM hashtagusers"
+		res = self.session.execute(query)
+		if not res:
+			print "No hashtags in database"
+			return None
+		else:
+			return res
 
 	###############################################################################
 	# func: 	new_user		 																												#
@@ -48,13 +57,21 @@ class Cassandra(object):
 	def get_user(self,username):
 		query = "SELECT * FROM users WHERE username = '%s'" % username
 		res = self.session.execute(query)
-		if res:
-		  for r in res:
-		      print r.username,r.avglikes,r.avgretweets,r.followers,r.fullname,r.numappeared,r.numtweets,r.lastupdated
+		if not res:
+		  print "Could not find user: %s" % username
 		return res
 	
+	# the user with most recent timestamp
 	def get_most_recent_user(self, username):
-		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastUpdated DESC limit 1" % username
+		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated DESC limit 1" % username
+		res = self.session.execute(query)
+		if not res:
+		  print "Could not find user: %s" % username
+		return res
+		
+	# user with oldest timestamp
+	def get_oldest_user(self, username):
+		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated ASC limit 1" % username
 		res = self.session.execute(query)
 		if not res:
 		  print "Could not find user: %s" % username
@@ -64,3 +81,31 @@ class Cassandra(object):
 		query = "SELECT username FROM hashtagusers WHERE hashtag = '%s'" % hashtag
 		res = self.session.execute(query)
 		return res
+	
+	# user within given time range
+	def get_user_from_dates(self, user, date_beg, date_end):
+		query = session.prepare("""SELECT * from users where username=? and lastupdated > ? and lastupdated < ?;""")
+		res = self.session.execute(query, [user, date_beg, date_end])
+		if not res:
+			print "no user and timestamp in that date"
+			return None
+		else:
+			return res
+##############################################################################################################
+#
+# Update both tables
+#
+###################################################################################################
+
+	# used update both tables in user_rank.py
+	def update_user_rank(self, username, hashtag, user_rank):
+		query1 = session.prepare("""UPDATE hashtagusers SET userrank = ? WHERE username = ? and hashtag = ?;""")
+		query2 = session.prepare("""UPDATE users SET userrank = ? WHERE username = ? and lastupdated = ?;""")
+		
+		most_recent_users = self.get_most_recent_user(username)
+	
+		for most_recent_user in most_recent_users:
+			most_recent_updated = most_recent_user.lastupdated
+		
+		self.session.execute(query1, [user_rank, username, hashtag])
+		self.session.execute(query2, [user_rank, username, most_recent_updated])

@@ -44,14 +44,14 @@
                     </thead>
                     <tbody>
                     {% set i = 0 %}
-                    {% for influencer in potential_influencers %}
+                    {% for influencer, influencer_info in potential_influencers.iteritems() %}
                         <tr>
                             <td class="text-center"><a href="{{ links[i] }}">{{ influencer }}</a></td>
-							<td class="text-center">{{ potential_influencers[influencer] }}</td>
-							<td class="text-center">{{ potential_influencers[influencer][numTweets] }}</td>
-							<td class="text-center">{{ potential_influencers[influencer][avgLikes] }}</td>
-							<td class="text-center">{{ potential_influencers[influencer][avgRetweets] }}</td>
-							<td class="text-center">{{ potential_influencers[influencer][userRank] }}</td>
+							<td class="text-center">{{ influencer_info['followers'] }}</td>
+							<td class="text-center">{{ influencer_info['numTweets'] }}</td>
+							<td class="text-center">{{ influencer_info['avgLikes'] }}</td>
+							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
+							<td class="text-center">{{influencer_info['userRank'] }}</td>
 							{% set i = i + 1 %}
                         </tr>
                     {% endfor %}
