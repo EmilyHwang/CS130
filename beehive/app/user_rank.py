@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, date
 
 class UserRank:
 
-	def __init__(self):
-		self.cass = Cassandra('beehive')
+	def __init__(self, cass):
+		self.cass = cass
 
 		
 	def __get_followers_growth(self, user):	

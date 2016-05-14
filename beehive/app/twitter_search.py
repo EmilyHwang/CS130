@@ -141,7 +141,7 @@ class Search:
 			# add to tables
 			user_info = potential_influencers[user]
 			
-			userrank = UserRank()
+			userrank = UserRank(cass)
 			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0)
 			
 			cassUsers = cass.get_user(user)
