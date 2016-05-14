@@ -2,10 +2,6 @@ import datetime
 import re
 from cassandra.cluster import Cluster
 
-KEYSPACE = 'beehive'
-cluster = Cluster()
-session = cluster.connect(KEYSPACE)
-
 class Cassandra(object):
 	def __init__(self,keyspace):
 		self.keyspace = keyspace
@@ -19,7 +15,7 @@ class Cassandra(object):
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
 	def new_hashtag(self, hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank):
-		query = session.prepare("""INSERT INTO hashtagusers(hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
+		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
 		print query
 		self.session.execute(query,[hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank])
 
@@ -49,7 +45,7 @@ class Cassandra(object):
 	# desc:		Insert a user with stats to the user table													#
 	###############################################################################
 	def new_user(self, username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank):
-		query = session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
+		query = self.session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
 		  
 		print query
 		self.session.execute(query, [username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank])
