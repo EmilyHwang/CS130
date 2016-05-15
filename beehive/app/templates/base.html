@@ -64,6 +64,17 @@
                 <li id="nav-about"><a href="/about">About</a></li>
                 <li id="nav-contact"><a href="/contact">Contact</a></li>
             </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li id="nav-login">
+                    <a href="/login">
+                    {% if session['screen_name'] is defined %}
+                        {{ session['screen_name'] }}
+                    {% else %}
+                        Login
+                    {% endif %}
+                    </a>
+                </li>
+            </ul>
         </div><!--/.nav-collapse -->
     </div>
 </nav>
