@@ -1,14 +1,13 @@
-cassandra-driver==3.3.0
 ccm==2.1.7
-EasyProcess==0.2.2
 Flask==0.10.1
-futures==3.0.5
+Flask-OAuth==0.12
+httplib2==0.9.2
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
 MySQL-python==1.2.5
+oauth2==1.9.0.post1
 oauthlib==1.0.3
-PyVirtualDisplay==0.2
 PyYAML==3.11
 requests==2.9.1
 requests-oauthlib==0.6.1
