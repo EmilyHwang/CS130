@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
-import twitter
 import rand_influencers
 import pdb
 import categories
