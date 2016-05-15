@@ -63,7 +63,7 @@ def search():
 
     if request.method == 'POST':
         query = request.form['user-input']
-        search = twitter_oauth.Search(query)
+        search = twitter_search.Search(query)
         potential_influencers = search.search_twitter()
 
         links = []
