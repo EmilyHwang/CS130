@@ -4,10 +4,7 @@ from tweepy import OAuthHandler, API
 import rand_influencers
 import pdb
 import categories
-<<<<<<< HEAD
 import filter_influencers
-
-=======
 import twitter_search
 >>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
 
@@ -95,7 +92,6 @@ def search():
 def search_page():
 	return render_template('search_page.html')
 
-<<<<<<< HEAD
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
 	print request.form
@@ -123,7 +119,6 @@ def search():
 		return render_template('search.html', data=data)
 '''
 
-=======
 @app.route('/login')
 def login():
     return twitter_oauth.authorize(callback=url_for('oauth_authorized',
@@ -164,7 +159,6 @@ def oauth_authorized(response):
         links.append('https://twitter.com/' + name)
 
     return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
 
 @app.route('/about')
 def about():
