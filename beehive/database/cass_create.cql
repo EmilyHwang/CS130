@@ -6,7 +6,7 @@ Use Beehive;
 CREATE TABLE HashtagUsers (
 	hashtag text,
 	username text,
-	userRank int,
+	userRank double,
 	tweetText text,
 	tweetCreated timestamp,
 	avgLikes float,
@@ -25,6 +25,6 @@ CREATE TABLE Users (
 	avgRetweets float,
 	followers int,
 	numTweets int,
-	userRank int,
+	userRank double,
 	PRIMARY KEY (username, lastUpdated)
 ) WITH CLUSTERING ORDER BY (lastUpdated DESC);
