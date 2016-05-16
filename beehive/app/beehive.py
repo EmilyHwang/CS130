@@ -4,12 +4,8 @@ from tweepy import OAuthHandler, API
 import rand_influencers
 import pdb
 import categories
-<<<<<<< HEAD
 import filter_influencers
-
-=======
 import twitter_search
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
 
 # Configurations
 DEBUG = True
@@ -46,28 +42,20 @@ query = ''
 @app.route('/')
 @app.route('/index')
 def index():
-	# 'data' is a variable that passes info to template for rendering
-	# So for example, place stuff we retrieve from the database, api call, etc. into data
-	#data = {}
+    # 'data' is a variable that passes info to template for rendering
+    # So for example, place stuff we retrieve from the database, api call, etc. into data
+    #data = {}
 
-	#test code
-	cats = categories.getAllCategories();
-	#end test code
+    #test code
+    cats = categories.getAllCategories();
+    #end test code
 
-	users = rand_influencers.get_users(3)
-	return render_template('index.html', users=users, categories=cats)
+    users = rand_influencers.get_users(3)
+    return render_template('index.html', users=users, categories=cats)
 
 
 @app.route('/search', methods=['POST'])
 def search():
-<<<<<<< HEAD
-	if request.method == 'POST':
-		global query
-		query = request.form['user-input']
-		potential_influencers = twitter.search_twitter(query)
-		global origData
-		origData = potential_influencers
-=======
     # Before completing the search, first make sure that the user is logged in.
     access_token = session.get('twitter_token')
     if access_token is None:
@@ -76,54 +64,54 @@ def search():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
+        global query
         query = request.form['user-input']
         search = twitter_search.Search(query)
         potential_influencers = search.search_twitter()
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
+        global origData
+        origData = potential_influencers
 
-		links = []
-		for name in potential_influencers:
-			links.append('https://twitter.com/' + name)
+        links = []
+        for name in potential_influencers:
+            links.append('https://twitter.com/' + name)
 
-		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
+        return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
 
-	else:
-		return redirect('/search-page')
+    else:
+        return redirect('/search-page')
 
 
 @app.route('/search-page')
 def search_page():
-	return render_template('search_page.html')
+    return render_template('search_page.html')
 
-<<<<<<< HEAD
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
-	print request.form
-	print origData
-	minFollowers = request.form['minFollowers']
-	maxFollowers = request.form['maxFollowers']
+    print request.form
+    print origData
+    minFollowers = request.form['minFollowers']
+    maxFollowers = request.form['maxFollowers']
 
-	filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
-	print filtered_influencers
-	links = []
-	for name in filtered_influencers:
-		links.append('https://twitter.com/' + name)
+    filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
+    print filtered_influencers
+    links = []
+    for name in filtered_influencers:
+        links.append('https://twitter.com/' + name)
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers)
+    return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers)
 
 '''
 @app.route('/search', methods=['POST', 'GET'])
 def search():
-	if request.method == 'POST':
-		searchword = request.form['searchterm']
-		potential_influencers = twitter.search_twitter(searchword)
-		return render_template('search_result.html', potential_influencers=potential_influencers)
-	else:
-		data = {}
-		return render_template('search.html', data=data)
+    if request.method == 'POST':
+        searchword = request.form['searchterm']
+        potential_influencers = twitter.search_twitter(searchword)
+        return render_template('search_result.html', potential_influencers=potential_influencers)
+    else:
+        data = {}
+        return render_template('search.html', data=data)
 '''
 
-=======
 @app.route('/login')
 def login():
     return twitter_oauth.authorize(callback=url_for('oauth_authorized',
@@ -164,19 +152,18 @@ def oauth_authorized(response):
         links.append('https://twitter.com/' + name)
 
     return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
 
 @app.route('/about')
 def about():
-	data = {}
-	return render_template('about.html', data=data)
+    data = {}
+    return render_template('about.html', data=data)
 
 
 @app.route('/contact')
 def contact():
-	data = {}
-	return render_template('contact.html', data=data)
+    data = {}
+    return render_template('contact.html', data=data)
 
 
 if __name__ == '__main__':
-	app.run()
+    app.run()
