@@ -7,7 +7,7 @@ access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
 consumer_key = os.environ['CONSUMER_KEY']
 consumer_secret = os.environ['CONSUMER_SECRET']
 
-hashtagArr = ["Marvel", "Starwars", "CaptainAmericaCivilWar", "mystupidboss", "assassinscreed", "acapella", "taylorswift", "justinbeiber", "Cannes2016", "NowStreaming", "InvictusGames", "SummerVibes", "beautyboys", "bootymonday", "legday", "mondaymotivation"]
+hashtagArr = ["Marvel", "Starwars", "CaptainAmericaCivilWar", "mystupidboss", "assassinscreed", "acapella", "taylorswift", "justinbeiber", "Cannes2016", "NowStreaming", "InvictusGames", "SummerVibes", "beautyboys", "bootymonday", "legday", "mondaymotivation", "fitspo"]
 
 for hashtag in hashtagArr:
 	search = Search(hashtag)
