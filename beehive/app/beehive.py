@@ -6,7 +6,6 @@ import pdb
 import categories
 import filter_influencers
 import twitter_search
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
 
 # Configurations
 DEBUG = True
@@ -57,14 +56,6 @@ def index():
 
 @app.route('/search', methods=['POST'])
 def search():
-<<<<<<< HEAD
-	if request.method == 'POST':
-		global query
-		query = request.form['user-input']
-		potential_influencers = twitter.search_twitter(query)
-		global origData
-		origData = potential_influencers
-=======
     # Before completing the search, first make sure that the user is logged in.
     access_token = session.get('twitter_token')
     if access_token is None:
@@ -73,10 +64,12 @@ def search():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
+    	global query
         query = request.form['user-input']
         search = twitter_search.Search(query)
         potential_influencers = search.search_twitter()
->>>>>>> e866e2dba865232a10a668d028b1a0cd82a562a2
+        global origData
+        origData = potential_influencers
 
 		links = []
 		for name in potential_influencers:
