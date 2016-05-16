@@ -1,4 +1,4 @@
-from orm import Cassandra
+from cass_orm import Cassandra
 from datetime import datetime, timedelta, date
 
 class UserRank:
