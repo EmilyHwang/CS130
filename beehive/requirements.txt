@@ -1,5 +1,5 @@
 cassandra-driver==3.3.0
-ccm==2.1.7
+ccm
 cssselect==0.9.1
 EasyProcess==0.2.2
 enum34==1.1.5
