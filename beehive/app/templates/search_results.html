@@ -14,6 +14,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/bs/jszip-2.5.0,pdfmake-0.1.18,dt-1.10.11,b-1.1.2,b-flash-1.1.2,b-html5-1.1.2,b-print-1.1.2,fh-3.1.1,r-2.0.2,sc-1.4.1/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/t/bs/jszip-2.5.0,pdfmake-0.1.18,dt-1.10.11,b-1.1.2,b-flash-1.1.2,b-html5-1.1.2,b-print-1.1.2,fh-3.1.1,r-2.0.2,sc-1.4.1/datatables.min.js"></script>
     -->
+
 {% endblock head %}
 
 {% block page_description %}
@@ -28,6 +29,26 @@
 
 {% block content %}
     <br>
+    <!-- (1) Display Filtering Options -->
+    <div class="text-left form-inline">
+        <form action="/filtered_results" method="post">
+            <div class="form-group">
+                <strong>Filter By: </strong><br>
+                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
+                    <label>Min Follower Count</label>
+                    <input type="text" class="form-control" name="minFollowers">
+                </div>
+                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
+                    <label>Max Follower Count</label>
+                    <input type="text" class="form-control" name="maxFollowers">
+                </div>
+                <input type="submit" value="Apply">
+            </div>
+        </form>
+    </div>
+
+
+    <!-- (2) Display Results -->
     {% if potential_influencers is defined %}
         <div class="row table-responsive">
             <div class="col-lg-12">
@@ -42,7 +63,7 @@
                             <th class="text-center">Influencer Ranking</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="resultsTable">
                     {% set i = 0 %}
                     {% for influencer, influencer_info in potential_influencers.iteritems() %}
                         <tr>
@@ -55,6 +76,7 @@
 							{% set i = i + 1 %}
                         </tr>
                     {% endfor %}
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -69,4 +91,5 @@
     <script>
         activateNavBar('#nav-search');
     </script>
+
 {% endblock content %}
