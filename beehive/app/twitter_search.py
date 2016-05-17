@@ -72,49 +72,32 @@ class Search:
 	# parameters: user as screen_nam
 	# returns: json
 	# -----------------------------------------------------------------------
-	def __query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, since="2016-05-01", until="2016-05-15", include_rts=0).items(self.max_user_timeline_tweets)
+	def query_user_timeline(self, user):
+		data = Cursor(api.user_timeline, screen_name=user, include_rts=0).items(self.max_user_timeline_tweets)
 
-		query_results = []
-		for tweet in data:
-			query_results.append(json.loads(json.dumps(tweet._json)))
-		return query_results
-	# -----------------------------------------------------------------------
-	# searches user timeline - last 3200 statuses
-	# parameters: user as screen_names
-	# returns: {'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a}
-	# -----------------------------------------------------------------------
-	def __extract_user_timeline_info(self, user):
-		print "Extracting user: " + user
-		query_results = self.query_user_timeline(user)
-		# extract user info once from first tweet, should be same for ALL tweets
-		if len(query_results) > 0:
-			user_info = query_results[0]['user']
-		else:
-			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
-		followers_count = user_info['followers_count']
-		statuses_count = user_info['statuses_count']
-		#all_tweet_ids = {}
+		last_status = None
 
 		favorite_count_sum = 0
 		retweet_count_sum = 0
 		total_num_tweets = 0
-		#if followers_count > MIN_NUM_OF_FOLLOWERS: #check should be redundant
-		for tweet in query_results:
-			print tweet['created_at']
-			total_num_tweets += 1
-			retweet_count_sum += tweet['retweet_count']
-			favorite_count_sum += tweet['favorite_count']
-				#all_tweet_ids[tweet['id_str']] = 0
-		# else:
-			# print "discarded: " + user
-			# return None
 
-		avg_favorite_count = favorite_count_sum/total_num_tweets
-		avg_retweet_count = retweet_count_sum/total_num_tweets
-		#avg_num_of_replies = extract_avg_num_of_replies(user, all_tweet_ids)
-		return {'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
-	
+		for status in data:
+			last_status = status
+			total_num_tweets += 1
+			favorite_count_sum += status.favorite_count
+			retweet_count_sum += status.retweet_count
+
+		if last_status is None:
+			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
+			
+		else:
+			followers_count = last_status.user.followers_count
+			statuses_count = last_status.user.statuses_count
+			avg_favorite_count = favorite_count_sum/total_num_tweets
+			avg_retweet_count = retweet_count_sum/total_num_tweets
+
+			return {'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
+
 	# ----------------------------------------------------------------------
 	# parameters: hashtag
 	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, }, user2: {}}
@@ -127,8 +110,10 @@ class Search:
 		print user_dict
 		mentioned_users = users_hashtag_list[1]
 		
+		# This is where we parallelize
+		# Each 
 		for user in user_dict:
-			user_info = self.__extract_user_timeline_info(user)
+			user_info = self.query_user_timeline(user)
 			if user_info is not None:
 				all_info = user_dict[user].copy()
 				all_info.update(user_info)
@@ -238,7 +223,7 @@ class Search:
 				
 	#def get_user_info(usernames):
 
-# if __name__ == "__main__":
-# 	searcher = Search('#ucla2016')
-# 	a = searcher.query_user_timeline('RealTracyMorgan')
-# 	print a
+if __name__ == "__main__":
+	searcher = Search('#fitspo')
+	a = searcher.query_user_timeline("chelseahandler")
+	#print a
