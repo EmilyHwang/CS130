@@ -23,18 +23,18 @@ app.secret_key = SECRET_KEY
 # For user-level authentication
 oauth = OAuth()
 twitter_oauth = oauth.remote_app('twitter',
-                                 base_url='https://api.twitter.com/1/',
-                                 request_token_url='https://api.twitter.com/oauth/request_token',
-                                 access_token_url='https://api.twitter.com/oauth/access_token',
-                                 authorize_url='https://api.twitter.com/oauth/authenticate',
-                                 consumer_key=twitter_search.consumer_key,
-                                 consumer_secret=twitter_search.consumer_secret
-                                 )
+								 base_url='https://api.twitter.com/1/',
+								 request_token_url='https://api.twitter.com/oauth/request_token',
+								 access_token_url='https://api.twitter.com/oauth/access_token',
+								 authorize_url='https://api.twitter.com/oauth/authenticate',
+								 consumer_key=twitter_search.consumer_key,
+								 consumer_secret=twitter_search.consumer_secret
+								 )
 
 
 @twitter_oauth.tokengetter
 def get_twitter_token(token=None):
-    return session.get('twitter_token')
+	return session.get('twitter_token')
 
 origData = {}
 query = ''
@@ -114,44 +114,44 @@ def search():
 
 @app.route('/login')
 def login():
-    return twitter_oauth.authorize(callback=url_for('oauth_authorized',
-                                                    next=request.args.get('next') or request.referrer or None))
+	return twitter_oauth.authorize(callback=url_for('oauth_authorized',
+													next=request.args.get('next') or request.referrer or None))
 
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
 def oauth_authorized(response):
-    next_url = request.args.get('next') or url_for('index')
-    if response is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
+	next_url = request.args.get('next') or url_for('index')
+	if response is None:
+		flash(u'You denied the request to sign in.')
+		return redirect(next_url)
 
-    # Since auth is defined in twitter.py. Later change twitter to twitter_search
-    twitter_search.access_token = response['oauth_token']
-    twitter_search.access_token_secret = response['oauth_token_secret']
-    session['screen_name'] = response['screen_name']
+	# Since auth is defined in twitter.py. Later change twitter to twitter_search
+	twitter_search.access_token = response['oauth_token']
+	twitter_search.access_token_secret = response['oauth_token_secret']
+	session['screen_name'] = response['screen_name']
 
-    session['twitter_token'] = (
-        response['oauth_token'],            # access token
-        response['oauth_token_secret']      # access token secret
-    )
+	session['twitter_token'] = (
+		response['oauth_token'],            # access token
+		response['oauth_token_secret']      # access token secret
+	)
 
-    # For web apps, we need to re-build the auth handler...
-    twitter_search.auth = OAuthHandler(twitter_search.consumer_key, twitter_search.consumer_secret)
-    twitter_search.auth.set_access_token(twitter_search.access_token, twitter_search.access_token_secret)
-    twitter_search.api = API(twitter_search.auth, wait_on_rate_limit=True)
+	# For web apps, we need to re-build the auth handler...
+	twitter_search.auth = OAuthHandler(twitter_search.consumer_key, twitter_search.consumer_secret)
+	twitter_search.auth.set_access_token(twitter_search.access_token, twitter_search.access_token_secret)
+	twitter_search.api = API(twitter_search.auth, wait_on_rate_limit=True)
 
-    query = session.get('query')
-    if query is None:
-        return redirect(url_for('index'))
+	query = session.get('query')
+	if query is None:
+		return redirect(url_for('index'))
 
-    search = twitter_search.Search(query)
-    potential_influencers = search.search_twitter()
+	search = twitter_search.Search(query)
+	potential_influencers = search.search_twitter()
 
-    links = []
-    for name in potential_influencers:
-        links.append('https://twitter.com/' + name)
+	links = []
+	for name in potential_influencers:
+		links.append('https://twitter.com/' + name)
 
-    return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
 
 @app.route('/about')
 def about():

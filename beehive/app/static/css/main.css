@@ -12,6 +12,7 @@ html, body {
 }
 
 /* flex does not work on <= IE9 */
+/* make panels in a row the same height */
 .flex, .flex > div[class*='col-'] {
     display: -webkit-box;
     display: -moz-box;
