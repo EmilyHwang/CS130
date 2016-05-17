@@ -72,8 +72,8 @@ class Search:
 	# parameters: user as screen_nam
 	# returns: json
 	# -----------------------------------------------------------------------
-	def query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=0).items(self.max_user_timeline_tweets)
+	def __query_user_timeline(self, user):
+		data = Cursor(api.user_timeline, screen_name=user, since="2016-05-01", until="2016-05-15", include_rts=0).items(self.max_user_timeline_tweets)
 
 		query_results = []
 		for tweet in data:
@@ -98,8 +98,11 @@ class Search:
 
 		favorite_count_sum = 0
 		retweet_count_sum = 0
+		total_num_tweets = 0
 		#if followers_count > MIN_NUM_OF_FOLLOWERS: #check should be redundant
 		for tweet in query_results:
+			print tweet['created_at']
+			total_num_tweets += 1
 			retweet_count_sum += tweet['retweet_count']
 			favorite_count_sum += tweet['favorite_count']
 				#all_tweet_ids[tweet['id_str']] = 0
@@ -107,8 +110,8 @@ class Search:
 			# print "discarded: " + user
 			# return None
 
-		avg_favorite_count = favorite_count_sum/len(query_results)
-		avg_retweet_count = retweet_count_sum/len(query_results)
+		avg_favorite_count = favorite_count_sum/total_num_tweets
+		avg_retweet_count = retweet_count_sum/total_num_tweets
 		#avg_num_of_replies = extract_avg_num_of_replies(user, all_tweet_ids)
 		return {'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
 	
