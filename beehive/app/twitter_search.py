@@ -72,8 +72,8 @@ class Search:
 	# parameters: user as screen_nam
 	# returns: json
 	# -----------------------------------------------------------------------
-	def __query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=1).items(self.max_user_timeline_tweets)
+	def query_user_timeline(self, user):
+		data = Cursor(api.user_timeline, screen_name=user, count=200, include_rts=0).items(self.max_user_timeline_tweets)
 
 		query_results = []
 		for tweet in data:
@@ -86,7 +86,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def __extract_user_timeline_info(self, user):
 		print "Extracting user: " + user
-		query_results = self.__query_user_timeline(user)
+		query_results = self.query_user_timeline(user)
 		# extract user info once from first tweet, should be same for ALL tweets
 		if len(query_results) > 0:
 			user_info = query_results[0]['user']
@@ -236,5 +236,6 @@ class Search:
 	#def get_user_info(usernames):
 
 # if __name__ == "__main__":
-	# searcher = Search('#ucla2016')
-	# searcher.search_twitter()
+# 	searcher = Search('#ucla2016')
+# 	a = searcher.query_user_timeline('RealTracyMorgan')
+# 	print a
