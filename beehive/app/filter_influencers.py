@@ -11,9 +11,10 @@ def applyFilters(influencerList, minFollowers, maxFollowers):
 	minF = int(minFollowers)
 	maxF = int(maxFollowers)
 	# do filtering
-	for influencer, stats in influencerList.iteritems():
-		numFollowers = int(stats[0])
+	for influencer, influencer_info in influencerList.iteritems():
+		numFollowers = int(influencer_info['followers'])
 		print numFollowers
 		if minF <= numFollowers <= maxF:
-			filteredData[influencer] = stats
-	return OrderedDict(sorted(filteredData.items(), key=lambda(k,v): v[4], reverse=True))
+			filteredData[influencer] = influencer_info
+	#return OrderedDict(sorted(filteredData.items(), key=lambda(k,v): v[4], reverse=True))
+	return filteredData
