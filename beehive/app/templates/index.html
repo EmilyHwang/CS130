@@ -59,10 +59,15 @@
 
     <!-- (II) Categories -->
     <!-- TODO: make a two level menu and add event handler -->
-    <span class="text-left"><h2>Browse By Category</h2></span>
+    <span class="text-left"><h2>Browse Influencers By Category</h2></span>
     {% for entry in categories %}
         <div class="text-left">
-            {{ entry['categoryName'] }} : {{ entry['subCategories'] }}
+                {{ entry['categoryName'] }} :
+            {% for subcategory in entry['subCategories'] %}
+                <span class="category-clickable"><a href="/influencers/{{subcategory}}" target="_self">
+                    {{ subcategory }}
+                </a></span>&nbsp;
+            {% endfor %}
             <br>
         </div>
     {% endfor %}

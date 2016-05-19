@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import MySQLdb
+import string
 
 # returns all categories and subcategories like:
 # { {categoryName, [subCategory, subCategory, ...] }, ... }
@@ -22,10 +23,10 @@ def getAllCategories():
 		cur_sub = db.cursor()
 		cur_sub.execute("SELECT subCategory FROM Categories WHERE categoryName = %s", (cat,) )
 		sub_cats = cur_sub.fetchall()
-		# strip extra syntax
+		# strip extra syntax and format ampersands
 		pretty_sub_cats = []
 		for (sub_cat, ) in sub_cats:
-			pretty_sub_cats.append(sub_cat)
+			pretty_sub_cats.append( string.replace(sub_cat, '&amp;', '&') )
 		entry = {}
 		entry['categoryName'] = cat;
 		entry['subCategories'] = pretty_sub_cats;

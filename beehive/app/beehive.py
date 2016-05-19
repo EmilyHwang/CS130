@@ -39,6 +39,7 @@ def get_twitter_token(token=None):
 origData = {}
 query = ''
 
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -46,11 +47,10 @@ def index():
 	# So for example, place stuff we retrieve from the database, api call, etc. into data
 	#data = {}
 
-	#test code
 	cats = categories.getAllCategories();
-	#end test code
 
 	users = rand_influencers.get_users(3)
+
 	return render_template('index.html', users=users, categories=cats)
 
 
@@ -85,6 +85,7 @@ def search():
 def search_page():
 	return render_template('search_page.html')
 
+
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
 	print request.form
@@ -99,6 +100,16 @@ def applyFilters():
 		links.append('https://twitter.com/' + name)
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers)
+
+
+@app.route('/influencers/<path:category>', methods=['GET'])
+def getInfluencersByCategory(category):
+	cats = categories.getAllCategories()
+
+	users = rand_influencers.get_users_by_category(12, category)
+
+	return render_template('index.html', users=users, categories=cats)
+
 
 '''
 @app.route('/search', methods=['POST', 'GET'])
@@ -115,7 +126,8 @@ def search():
 @app.route('/login')
 def login():
 	return twitter_oauth.authorize(callback=url_for('oauth_authorized',
-													next=request.args.get('next') or request.referrer or None))
+									next=request.args.get('next') or request.referrer or None))
+
 
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
@@ -152,6 +164,7 @@ def oauth_authorized(response):
 		links.append('https://twitter.com/' + name)
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
+
 
 @app.route('/about')
 def about():
