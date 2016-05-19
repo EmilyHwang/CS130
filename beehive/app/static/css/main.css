@@ -33,3 +33,7 @@ html, body {
    display: flex;
    flex-grow: 1;
 }
+
+.category-clickable {
+  text-decoration: underline;
+}
