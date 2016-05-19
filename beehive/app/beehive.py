@@ -83,8 +83,18 @@ def search():
         query = request.form['user-input']
         search = twitter_search.Search(query)
         
+        # Get a list of users back
+        users_exist = search.search_users()
+
+        potential_influencers = None
+        # if we already have this information
+        if users_exist['exist']:
+            potential_influencers = users_exist['potential_influencers']
+
+        # We need to keep querying until we get all the data back (10 each time)
+        else:
+            potential_influencers = search.search_users_detail(users_exist['potential_influencers'])
         
-        potential_influencers = search.search_twitter()
         global origData
         origData = potential_influencers
 
@@ -182,7 +192,15 @@ def oauth_authorized(response):
 		return redirect(url_for('index'))
 
 	search = twitter_search.Search(query)
-	potential_influencers = search.search_twitter()
+	users_exist = search.search_users()
+	potential_influencers = None
+	# if we already have this information
+	if users_exist['exist']:
+		potential_influencers = users_exist['potential_influencers']
+
+	# We need to keep querying until we get all the data back (10 each time)
+	else:
+		potential_influencers = search.search_users_detail(users_exist['potential_influencers'])
 
 	links = []
 	for name in potential_influencers:

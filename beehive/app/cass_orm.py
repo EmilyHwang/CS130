@@ -62,7 +62,7 @@ class Cassandra(object):
 		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated DESC limit 1" % username
 		res = self.session.execute(query)
 		if not res:
-		  print "Could not find most recent user: %s" % username
+		  print "Could not find user: %s" % username
 		return res
 		
 	# user with oldest timestamp
@@ -70,7 +70,7 @@ class Cassandra(object):
 		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated ASC limit 1" % username
 		res = self.session.execute(query)
 		if not res:
-		  print "Could not find oldest user: %s" % username
+		  print "Could not find user: %s" % username
 		return res
 
 	def get_user_from_hashtag(self,hashtag):

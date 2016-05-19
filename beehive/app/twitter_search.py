@@ -106,26 +106,6 @@ class Search:
 			print 'process %s - user: %s, followers: %d, numTweets: %d' % (os.getpid(), user, followers_count, statuses_count)
 			return {'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
 
-	# ----------------------------------------------------------------------
-	# parameters: hashtag
-	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, }, user2: {}}
-	# -----------------------------------------------------------------------
-	def search_twitter_api(self):
-		potential_influencers = {}
-		users_hashtag_list  = self.__get_users_and_hashtags(self.hashtag)
-		user_dict = users_hashtag_list[0]
-		# print user_dict
-		mentioned_users = users_hashtag_list[1]
-
-		# Each 
-		for user in user_dict:
-			user_info = self.query_user_timeline(user)
-			if user_info is not None:
-				all_info = user_dict[user].copy()
-				all_info.update(user_info)
-				# print user + ": " + str(all_info)
-				potential_influencers[user] = all_info
-		return potential_influencers
 	
 	def update_cassandra(self, potential_influencers):
 		query = self.hashtag
@@ -157,6 +137,101 @@ class Search:
 				potential_influencers[user]['userRank'] = rank
 				
 		return potential_influencers
+			
+	# ----------------------------------------------------------------------
+	# parameters: users (<10)
+	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, 'userRank'}, user2: {}}
+	# 
+	# This function will query Twitter API and the timeline (or Cassandra if needed) to retreive
+	# 	10 users information
+	# -----------------------------------------------------------------------
+	def search_users_detail(self, users):
+		count = 0
+		potential_influencers = {}
+
+		for user in users:
+			print "Search user: %s timeline..." % user
+			user_info = self.query_user_timeline(user)
+			if user_info is not None:
+				all_info = users[user].copy()
+				all_info.update(user_info)
+				potential_influencers[user] = all_info
+				count += 1
+			if count == 10:
+				self.update_cassandra(potential_influencers)
+				return potential_influencers
+
+		self.update_cassandra(potential_influencers)
+		return potential_influencers
+
+	def search_users(self):
+		query = self.hashtag
+		# if hashtags exists in table, use datatabse, otherwise search twitter
+		
+		potential_influencers = {}
+	
+		self.cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
+		data = self.cur.fetchone()
+
+		if data is None: # hashtag doesn't exist, search twitter
+			print "Hashtag not found. Searching twitter"
+
+			# This is a list of all users appeared form searching the hashtag
+			init_results = self.__get_users_and_hashtags(self.hashtag)
+			users = init_results[0]
+			print users
+
+			try:
+				self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+				self.db.commit()
+			except:
+				self.db.rollback()
+
+			return {'potential_influencers': users, 'exist': False}
+
+		else :
+			#check timestamp
+
+			# older than one day, search twitter, and return the first 10 {potential_users, exist=false}
+			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	
+				print "Hashtag too old. Searching twitter"
+				users = self.__get_users_and_hashtags(self.hashtag)
+				print users
+
+				try:
+					self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
+					self.db.commit()
+				except:
+					self.db.rollback()
+					
+				return {'potential_influencers': users, 'exist': False}
+
+			# If the hashtags exists, we want to return {potential_users, exist=true}
+			else: # database has updated info
+				# go to cassandra
+				print "Retrieving data from Cassandra"
+				users = self.cass.get_hashtag(query)
+				if users is not None:
+					for user in users:
+						potential_influencers[user.username] = {'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets, 'userRank': user.userrank}
+				
+					#update timesearched
+					print "timesSearched: " + str(data['timeSearched'])
+					try:
+						self.cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
+						self.db.commit()
+					except:
+						self.db.rollback()
+
+					return {'potential_influencers': potential_influencers, 'exist': True}
+				else:
+					print "mysql and cassandra databases out of sync. Search user detail?"
+
+
+	################
+	# For Crawlers
+	################
+
 	# ----------------------------------------------------------------------
 	# parameters: hashtag
 	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, 'userRank'}, user2: {}}
@@ -218,28 +293,27 @@ class Search:
 			
 		print potential_influencers
 		return potential_influencers
-			
-	def search_twitter_new(self, page):
-		query = self.hashtag
-		# if hashtags exists in table, use datatabse, otherwise search twitter
-		
+
+	# ----------------------------------------------------------------------
+	# parameters: hashtag
+	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, }, user2: {}}
+	# -----------------------------------------------------------------------
+	def search_twitter_api(self):
 		potential_influencers = {}
-	
-		self.cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
-		data = self.cur.fetchone()
+		users_hashtag_list  = self.__get_users_and_hashtags(self.hashtag)
+		user_dict = users_hashtag_list[0]
+		# print user_dict
+		mentioned_users = users_hashtag_list[1]
 
-		if data is None: # hashtag doesn't exist, search twitter
-			print "Hashtag not found. Searching twitter"
-
-			# This is a list of all users appeared form searching the hashtag
-			init_results = self.__get_users_and_hashtags(self.q)
-			users = init_results[0]
-
-			# Here we search each user time line based on the page
-			# Query only 10 at a time
-
-
-
+		# Each 
+		for user in user_dict:
+			user_info = self.query_user_timeline(user)
+			if user_info is not None:
+				all_info = user_dict[user].copy()
+				all_info.update(user_info)
+				# print user + ": " + str(all_info)
+				potential_influencers[user] = all_info
+		return potential_influencers
 
 
 
