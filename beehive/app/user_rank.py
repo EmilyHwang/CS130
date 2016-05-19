@@ -1,4 +1,4 @@
-from orm import Cassandra
+from cass_orm import Cassandra
 from datetime import datetime, timedelta, date
 
 class UserRank:
@@ -6,14 +6,14 @@ class UserRank:
 	def __init__(self, cass):
 		self.cass = cass
 
-		
-	def __get_followers_growth(self, user):	
+
+	def __get_followers_growth(self, user):
 		last_week = datetime.now()-timedelta(days=7)
-		last_beg = last_week.replace(hour=0, minute=0, second=0, microsecond=0) 
-		last_end = last_week.replace(hour=23, minute=59, second=59) 
-					
+		last_beg = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
+		last_end = last_week.replace(hour=23, minute=59, second=59)
+
 		most_recent_users = self.cass.get_most_recent_user(user)
-		
+
 		for most_recent_user in most_recent_users:
 			if most_recent_user.lastupdated < datetime.now()-timedelta(days=1):
 				print "Most recent user is older than 1 day, using oldest rank"
@@ -21,14 +21,14 @@ class UserRank:
 			else:
 				print "Most recent user is within 1 day"
 				curr_user = most_recent_user
-		
+
 		last_users = self.cass.get_user_from_dates(user, last_beg, last_end)
 
 		if not last_users:
 			print "no timestamp older than one week found"
 			last_users = self.cass.get_oldest_user(user)
 			for user in last_users:
-				last_user = user	
+				last_user = user
 		else:
 			print "found user with week old timestamp"
 			for temp in last_users:
@@ -49,7 +49,7 @@ class UserRank:
 				print user
 				followers_growth = self.__get_followers_growth(user.username)
 				user_rank = self.calculate_user_rank(user.avglikes, user.avgretweets, user.followers, user.numtweets, followers_growth)
-				
+
 				if user_rank != user.userrank:
 					# update tables
 					print "User rank changed from: " + str(user.userrank) + "to: " + str(user_rank)
