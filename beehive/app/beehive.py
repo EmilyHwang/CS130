@@ -7,6 +7,10 @@ import categories
 import filter_influencers
 import twitter_search
 
+from flask_socketio import SocketIO, emit, disconnect
+from threading import Thread
+import eventlet
+
 # Configurations
 DEBUG = True
 DATABASE = ''
@@ -14,22 +18,29 @@ SECRET_KEY = 'SUPER SECRET CIA_FBI_NSA DEVELOPMENT KEY'
 USER_NAME = ''
 PASSWORD = ''
 
+# monkey patching is necessary because this application uses a background
+# thread
+async_mode = 'eventlet'
+eventlet.monkey_patch()
+
 # Create Flask application
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.secret_key = SECRET_KEY
+socketio = SocketIO(app, async_mode=async_mode)
+thread = None
 
 
 # For user-level authentication
 oauth = OAuth()
 twitter_oauth = oauth.remote_app('twitter',
-								 base_url='https://api.twitter.com/1/',
-								 request_token_url='https://api.twitter.com/oauth/request_token',
-								 access_token_url='https://api.twitter.com/oauth/access_token',
-								 authorize_url='https://api.twitter.com/oauth/authenticate',
-								 consumer_key=twitter_search.consumer_key,
-								 consumer_secret=twitter_search.consumer_secret
-								 )
+                                 base_url='https://api.twitter.com/1/',
+                                 request_token_url='https://api.twitter.com/oauth/request_token',
+                                 access_token_url='https://api.twitter.com/oauth/access_token',
+                                 authorize_url='https://api.twitter.com/oauth/authenticate',
+                                 consumer_key=twitter_search.consumer_key,
+                                 consumer_secret=twitter_search.consumer_secret
+                                 )
 
 
 @twitter_oauth.tokengetter
@@ -84,11 +95,15 @@ def search():
     else:
         return redirect('/search-page')
 
+############################################################################
+# ASYNC
+
+
+############################################################################
 
 @app.route('/search-page')
 def search_page():
     return render_template('search_page.html')
-
 
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
@@ -187,4 +202,4 @@ def contact():
 
 
 if __name__ == '__main__':
-    app.run()
+    socketio.run(app, debug=DEBUG)

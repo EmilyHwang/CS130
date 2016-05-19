@@ -225,6 +225,6 @@ class Search:
 		return potential_influencers
 			
 
-if __name__ == "__main__":
-	s = Search("fitspo")
-	s.search_twitter_api()
+# if __name__ == "__main__":
+# 	s = Search("fitspo")
+# 	s.search_twitter_api()

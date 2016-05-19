@@ -3,11 +3,13 @@ ccm
 cssselect==0.9.1
 EasyProcess==0.2.2
 enum34==1.1.5
+eventlet
 Flask==0.10.1
 futures==3.0.5
 idna==2.1
 Flask==0.10.1
 Flask-OAuth==0.12
+Flask_SocketIO
 httplib2==0.9.2
 itsdangerous==0.24
 Jinja2==2.8
