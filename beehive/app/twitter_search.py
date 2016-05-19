@@ -26,6 +26,10 @@ consumer_secret = os.environ['CONSUMER_SECRET']
 auth = AppAuthHandler(consumer_key, consumer_secret)
 api = API(auth, wait_on_rate_limit=True)
 
+# This is for multiprocessing
+def unwrap_self_f(arg, **kwarg):
+    return Search.query_user_timeline(*arg, **kwarg)
+
 class Search:
 	def __init__(self, query, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
 		q = "#" + query
@@ -89,35 +93,34 @@ class Search:
 
 		if last_status is None:
 			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
-			
+
 		else:
 			followers_count = last_status.user.followers_count
 			statuses_count = last_status.user.statuses_count
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
-
+			print 'process %s - user: %s, followers: %d, numTweets: %d' % (os.getpid(), user, followers_count, statuses_count)
 			return {'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
 
 	# ----------------------------------------------------------------------
 	# parameters: hashtag
 	# returns: {user: {'tweetText', 'tweetCreated', 'followers': x, 'numTweets': y', 'avgLikes': z, 'avgRetweets': a, }, user2: {}}
 	# -----------------------------------------------------------------------
-	def search_twitter_api(self, query):
+	def search_twitter_api(self):
 		potential_influencers = {}
-		tweets = self.__api_query_search(query)
+		tweets = self.__api_query_search(self.hashtag)
 		users_hashtag_list = self.__get_users_and_hashtags(tweets)
 		user_dict = users_hashtag_list[0]
-		print user_dict
+		# print user_dict
 		mentioned_users = users_hashtag_list[1]
-		
-		# This is where we parallelize
+
 		# Each 
 		for user in user_dict:
 			user_info = self.query_user_timeline(user)
 			if user_info is not None:
 				all_info = user_dict[user].copy()
 				all_info.update(user_info)
-				print user + ": " + str(all_info)
+				# print user + ": " + str(all_info)
 				potential_influencers[user] = all_info
 		return potential_influencers
 	
@@ -220,10 +223,8 @@ class Search:
 			
 		print potential_influencers
 		return potential_influencers
-				
-	#def get_user_info(usernames):
+			
 
 if __name__ == "__main__":
-	searcher = Search('#fitspo')
-	a = searcher.query_user_timeline("chelseahandler")
-	#print a
+	s = Search("fitspo")
+	s.search_twitter_api()
