@@ -36,6 +36,19 @@ class Search:
 		self.hashtag = q.lower()
 		self.max_tweets = max_tweets
 		self.max_user_timeline_tweets = max_user_timeline_tweets
+
+		# Connect to MySQLdb
+		self.db = MySQLdb.connect(host="localhost",    # your host, usually localhost
+				 user="",         # your username
+				 passwd="",  # your password
+				 db="beehive")        # name of the data base
+
+		# you must create a Cursor object. It will let
+		#  you execute all the queries you need
+		self.cur = self.db.cursor(MySQLdb.cursors.DictCursor)
+
+		# Connect to Cassandra
+		self.cass = Cassandra('beehive') 
 	
 	def __get_users_and_hashtags(self, query):
 		data = Cursor(api.search, q=query, result_type="recent", count=10).items(10)
@@ -100,7 +113,6 @@ class Search:
 	def search_twitter_api(self):
 		potential_influencers = {}
 		users_hashtag_list  = self.__get_users_and_hashtags(self.hashtag)
-		# users_hashtag_list = self.__get_users_and_hashtags(tweets)
 		user_dict = users_hashtag_list[0]
 		# print user_dict
 		mentioned_users = users_hashtag_list[1]
@@ -116,33 +128,32 @@ class Search:
 		return potential_influencers
 	
 	def update_cassandra(self, potential_influencers):
-		cass = Cassandra('beehive') 
 		query = self.hashtag
 
 		for user in potential_influencers:
 			# add to tables
 			user_info = potential_influencers[user]
 			
-			userrank = UserRank(cass)
+			userrank = UserRank(self.cass)
 			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0)
 			
-			cassUsers = cass.get_user(user)
+			cassUsers = self.cass.get_user(user)
 			if not cassUsers:
 				print "Inserting user: %s" % (user_info['fullname'])
-				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
+				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
 				
-				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank)
+				self.cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank)
 				potential_influencers[user]['userRank'] = rank
 				
 			else: # user already associated with another hashtag. need to update time appeared
 				print "User %s exits, update time"
-				cassUsers = cass.get_most_recent_user(user)
+				cassUsers = self.cass.get_most_recent_user(user)
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
 				updatedNumAppeared = cassUser.numappeared + 1
-				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
+				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
 				
-				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank)
+				self.cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank)
 				potential_influencers[user]['userRank'] = rank
 				
 		return potential_influencers
@@ -154,19 +165,11 @@ class Search:
 	def search_twitter(self):
 		query = self.hashtag
 		# if hashtags exists in table, use datatabse, otherwise search twitter
-		db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-						 user="",         # your username
-						 passwd="",  # your password
-						 db="beehive")        # name of the data base
-
-		# you must create a Cursor object. It will let
-		#  you execute all the queries you need
-		cur = db.cursor(MySQLdb.cursors.DictCursor)
 		
 		potential_influencers = {}
 	
-		cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
-		data = cur.fetchone()
+		self.cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
+		data = self.cur.fetchone()
 		
 		if data is None: #hashtag doesn't exist, search twitter
 			print "Hashtag not found. Searching twitter"
@@ -176,10 +179,10 @@ class Search:
 			# for user in potential_influencers:
 				# potential_influencers[user]['userRank'] = 0
 			try:
-				cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
-				db.commit()
+				self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+				self.db.commit()
 			except:
-				db.rollback()
+				self.db.rollback()
 
 			self.update_cassandra(potential_influencers)
 		else:
@@ -189,17 +192,16 @@ class Search:
 				potential_influencers = self.search_twitter_api(query)
 
 				try:
-					cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
-					db.commit()
+					self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
+					self.db.commit()
 				except:
-					db.rollback()
+					self.db.rollback()
 					
 				self.update_cassandra(potential_influencers)
 			else: # database has updated info
 				# go to cassandra
 				print "Retrieving data from Cassandra"
-				cass = Cassandra('beehive')
-				users = cass.get_hashtag(query)
+				users = self.cass.get_hashtag(query)
 				if users is not None:
 					for user in users:
 						potential_influencers[user.username] = {'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets, 'userRank': user.userrank}
@@ -207,36 +209,34 @@ class Search:
 					#update timesearched
 					print "timesSearched: " + str(data['timeSearched'])
 					try:
-						cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
-						db.commit()
+						self.cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
+						self.db.commit()
 					except:
-						db.rollback()
+						self.db.rollback()
 				else:
 					print "mysql and cassandra databases out of sync"
 			
 		print potential_influencers
 		return potential_influencers
 			
-	# def search_twitter(self, page):
-	# 	query = self.hashtag
-	# 	# if hashtags exists in table, use datatabse, otherwise search twitter
-	# 	db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-	# 					 user="",         # your username
-	# 					 passwd="",  # your password
-	# 					 db="beehive")        # name of the data base
-
-	# 	# you must create a Cursor object. It will let
-	# 	#  you execute all the queries you need
-	# 	cur = db.cursor(MySQLdb.cursors.DictCursor)
+	def search_twitter_new(self, page):
+		query = self.hashtag
+		# if hashtags exists in table, use datatabse, otherwise search twitter
 		
-	# 	potential_influencers = {}
+		potential_influencers = {}
 	
-	# 	cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
-	# 	data = cur.fetchone()
+		self.cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
+		data = self.cur.fetchone()
 
-	# 	if data is None: # hashtag doesn't exist, search twitter
-	# 		print "Hashtag not found. Searching twitter"
-	# 		init_users = self.
+		if data is None: # hashtag doesn't exist, search twitter
+			print "Hashtag not found. Searching twitter"
+
+			# This is a list of all users appeared form searching the hashtag
+			init_results = self.__get_users_and_hashtags(self.q)
+			users = init_results[0]
+
+			# Here we search each user time line based on the page
+			# Query only 10 at a time
 
 
 
@@ -244,6 +244,4 @@ class Search:
 
 
 
-# if __name__ == "__main__":
-# 	s = Search("fitspo")
-# 	s.search_twitter_api()
+
