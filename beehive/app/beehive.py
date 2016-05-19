@@ -51,7 +51,11 @@ def index():
 
 	users = rand_influencers.get_users(3)
 
-	return render_template('index.html', users=users, categories=cats)
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
+
+	return render_template('index.html', users=users, links=links, categories=cats)
 
 
 @app.route('/search', methods=['POST'])
@@ -108,7 +112,11 @@ def getInfluencersByCategory(category):
 
 	users = rand_influencers.get_users_by_category(12, category)
 
-	return render_template('index.html', users=users, categories=cats)
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
+
+	return render_template('index.html', users=users, links=links, categories=cats)
 
 
 '''

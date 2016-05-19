@@ -24,6 +24,7 @@
 
 	{% for row in users | batch(3) %}
 	<div class="row flex">
+        {% set i = 0 %}
 		{% for user in row %}
             <div class="col-sm-4 col-md-4 col-lg-4">
                 <div class="panel panel-default text-left">
@@ -35,7 +36,7 @@
                                 <img src={{ user['profile_image_url'] }} alt="">
                             </div>
                             <div class="col-sm-10 col-md-10 col-lg-10">
-                                <h3>@{{ user['screen_name'] }}</h3>
+                                <h3><a href="{{ links[i] }}">@{{ user['screen_name'] }}</a></h3>
                                 <small><em><strong>{{ user['name'] }}</strong></em></small>
                             </div>
                         </div> <!-- end class="row" -->
@@ -53,12 +54,12 @@
                     </div>
                 </div>
             </div>
+            {% set i = i + 1 %}
 	    {% endfor %}
 	</div>
 	{% endfor %}
 
     <!-- (II) Categories -->
-    <!-- TODO: make a two level menu and add event handler -->
     <span class="text-left"><h2>Browse Influencers By Category</h2></span>
     {% for entry in categories %}
         <div class="text-left">
