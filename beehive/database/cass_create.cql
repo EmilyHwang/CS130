@@ -26,5 +26,5 @@ CREATE TABLE Users (
 	followers int,
 	numTweets int,
 	userRank double,
-	PRIMARY KEY (username, lastUpdated)
+	PRIMARY KEY (username, lastUpdated, userrank)
 ) WITH CLUSTERING ORDER BY (lastUpdated DESC);
