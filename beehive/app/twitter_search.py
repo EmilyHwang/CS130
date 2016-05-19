@@ -177,7 +177,7 @@ class Search:
 		
 		if data is None: #hashtag doesn't exist, search twitter
 			print "Hashtag not found. Searching twitter"
-			potential_influencers = self.search_twitter_api(query)
+			potential_influencers = self.search_twitter_api()
 			
 			# check database for user rank?
 			# for user in potential_influencers:
