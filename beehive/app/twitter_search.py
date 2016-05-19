@@ -37,40 +37,31 @@ class Search:
 		self.max_tweets = max_tweets
 		self.max_user_timeline_tweets = max_user_timeline_tweets
 	
-	def __api_query_search(self, query):
-		data = Cursor(api.search, q=query, result_type="recent", count=100).items(self.max_tweets)
+	def __get_users_and_hashtags(self, query):
+		data = Cursor(api.search, q=query, result_type="recent", count=10).items(10)
 
 		query_results = []
-		for tweet in data:
-			query_results.append(json.loads(json.dumps(tweet._json)))
-		print "original query size: " + str(len(query_results))
-		return query_results
-	
-	# -----------------------------------------------------------------------
-	# Finds users of tweets
-	# parameters: list of tweets
-	# returns: [{'user_name': {tweetText, tweetCreated}}, mentioned_users hashtags]
-	# -----------------------------------------------------------------------
-	def __get_users_and_hashtags(self, tweets):
 		mentioned_users = []
 		hashtags = []
 		users = {}
-		for tweet in tweets:
-			if tweet['user']['followers_count'] > MIN_NUM_OF_FOLLOWERS:
-				tweet_datetime = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
-				tweet_user = tweet['user']['screen_name']
+
+		for tweet in data:
+			if tweet.user.followers_count > MIN_NUM_OF_FOLLOWERS:
+				tweet_datetime = tweet.created_at
+				tweet_user = tweet.user.screen_name
 
 				#if user already exists in dict, check if datetime is more recent
 				if tweet_user not in users or (tweet_user in users and users[tweet_user]['tweetCreated'] < tweet_datetime):
-					users[tweet_user] = {'fullname': tweet['user']['name'], 'tweetText': tweet['text'], 'tweetCreated': tweet_datetime}
+					users[tweet_user] = {'fullname': tweet.user.name, 'tweetText': tweet.text, 'tweetCreated': tweet_datetime}
 				
-				mentions = tweet['entities']['user_mentions']
+				mentions = tweet.entities['user_mentions']
 				mentioned_users.extend([mention['screen_name'] for mention in mentions])
 
-				hashtag_list = tweet['entities']['hashtags']
+				hashtag_list = tweet.entities['hashtags']
 				hashtags.extend([hashtag['text'] for hashtag in hashtag_list])
 
 		return [users, set(mentioned_users), hashtags]
+
 	# -----------------------------------------------------------------------
 	# searches user timeline, retrieves 200 tweets each time, API max = 3200, current max set to 1000
 	# parameters: user as screen_nam
@@ -108,8 +99,8 @@ class Search:
 	# -----------------------------------------------------------------------
 	def search_twitter_api(self):
 		potential_influencers = {}
-		tweets = self.__api_query_search(self.hashtag)
-		users_hashtag_list = self.__get_users_and_hashtags(tweets)
+		users_hashtag_list  = self.__get_users_and_hashtags(self.hashtag)
+		# users_hashtag_list = self.__get_users_and_hashtags(tweets)
 		user_dict = users_hashtag_list[0]
 		# print user_dict
 		mentioned_users = users_hashtag_list[1]
@@ -137,12 +128,14 @@ class Search:
 			
 			cassUsers = cass.get_user(user)
 			if not cassUsers:
+				print "Inserting user: %s" % (user_info['fullname'])
 				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
 				
 				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank)
 				potential_influencers[user]['userRank'] = rank
 				
 			else: # user already associated with another hashtag. need to update time appeared
+				print "User %s exits, update time"
 				cassUsers = cass.get_most_recent_user(user)
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
@@ -224,6 +217,32 @@ class Search:
 		print potential_influencers
 		return potential_influencers
 			
+	# def search_twitter(self, page):
+	# 	query = self.hashtag
+	# 	# if hashtags exists in table, use datatabse, otherwise search twitter
+	# 	db = MySQLdb.connect(host="localhost",    # your host, usually localhost
+	# 					 user="",         # your username
+	# 					 passwd="",  # your password
+	# 					 db="beehive")        # name of the data base
+
+	# 	# you must create a Cursor object. It will let
+	# 	#  you execute all the queries you need
+	# 	cur = db.cursor(MySQLdb.cursors.DictCursor)
+		
+	# 	potential_influencers = {}
+	
+	# 	cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
+	# 	data = cur.fetchone()
+
+	# 	if data is None: # hashtag doesn't exist, search twitter
+	# 		print "Hashtag not found. Searching twitter"
+	# 		init_users = self.
+
+
+
+
+
+
 
 # if __name__ == "__main__":
 # 	s = Search("fitspo")

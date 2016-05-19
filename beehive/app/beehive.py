@@ -82,6 +82,8 @@ def search():
         global query
         query = request.form['user-input']
         search = twitter_search.Search(query)
+        
+        
         potential_influencers = search.search_twitter()
         global origData
         origData = potential_influencers
