@@ -38,8 +38,8 @@ class UserRank:
 		print "old user followers: " + str(last_user.followers)
 		return (curr_user.followers - last_user.followers)/last_user.followers
 
-	def calculate_user_rank(self, avglikes, avgretweets, followers, numtweets, followers_growth):
-		return .2*avglikes + .305*avgretweets + .1*followers + .05*numtweets + .3*followers_growth
+	def calculate_user_rank(self, avglikes, avgretweets, followers, numtweets, followers_growth, numinteractions):
+		return .2*avglikes + .2*avgretweets + .05*followers + .03*numtweets + .202*followers_growth + .3*numinteractions
 
 	def update_users_rank(self):
 		hashtags = self.cass.get_all_hashtags()
@@ -48,7 +48,7 @@ class UserRank:
 			for user in users:
 				print user
 				followers_growth = self.__get_followers_growth(user.username)
-				user_rank = self.calculate_user_rank(user.avglikes, user.avgretweets, user.followers, user.numtweets, followers_growth)
+				user_rank = self.calculate_user_rank(user.avglikes, user.avgretweets, user.followers, user.numtweets, followers_growth, user.numinteractions)
 
 				if user_rank != user.userrank:
 					# update tables

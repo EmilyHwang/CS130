@@ -8,6 +8,7 @@ import os
 from datetime import datetime, timedelta
 from cass_orm import Cassandra
 from user_rank import UserRank
+from collections import OrderedDict
 import MySQLdb
 
 #from collections import Counter, OrderedDict
@@ -23,12 +24,13 @@ access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
 consumer_key = os.environ['CONSUMER_KEY']
 consumer_secret = os.environ['CONSUMER_SECRET']
 
-auth = AppAuthHandler(consumer_key, consumer_secret)
+auth = OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
 api = API(auth, wait_on_rate_limit=True)
 
 # This is for multiprocessing
 def unwrap_self_f(arg, **kwarg):
-    return Search.query_user_timeline(*arg, **kwarg)
+	return Search.query_user_timeline(*arg, **kwarg)
 
 class Search:
 	def __init__(self, query, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
@@ -77,8 +79,9 @@ class Search:
 	# returns: json
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, include_rts=0).items(self.max_user_timeline_tweets)
-
+		data = Cursor(api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
+		
+		print user
 		last_status = None
 
 		favorite_count_sum = 0
@@ -133,13 +136,13 @@ class Search:
 			user_info = potential_influencers[user]
 			
 			userrank = UserRank(cass)
-			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0)
+			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0, 0)
 			
 			cassUsers = cass.get_user(user)
 			if not cassUsers:
 				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
 				
-				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank)
+				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0)
 				potential_influencers[user]['userRank'] = rank
 				
 			else: # user already associated with another hashtag. need to update time appeared
@@ -149,7 +152,7 @@ class Search:
 				updatedNumAppeared = cassUser.numappeared + 1
 				cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
 				
-				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank)
+				cass.new_hashtag(query, user, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank, 0)
 				potential_influencers[user]['userRank'] = rank
 				
 		return potential_influencers
@@ -161,10 +164,10 @@ class Search:
 	def search_twitter(self):
 		query = self.hashtag
 		# if hashtags exists in table, use datatabse, otherwise search twitter
-		db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-						 user="",         # your username
-						 passwd="",  # your password
-						 db="beehive")        # name of the data base
+		db = MySQLdb.connect(host="localhost",	  # your host, usually localhost
+						 user="",		  # your username
+						 passwd="",	 # your password
+						 db="beehive")		  # name of the data base
 
 		# you must create a Cursor object. It will let
 		#  you execute all the queries you need
@@ -222,9 +225,37 @@ class Search:
 					print "mysql and cassandra databases out of sync"
 			
 		print potential_influencers
-		return potential_influencers
-			
+		return OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['followers'], reverse=True))
 
-if __name__ == "__main__":
-	s = Search("fitspo")
-	s.search_twitter_api()
+class Interact:
+	def __init__(self, query):
+		self.hashtag = "#" + query
+		
+	def follow_user(self, user_to_follow):
+		if not self.is_following_user(user_to_follow):
+			api.create_friendship(screen_name=user_to_follow)
+		else:
+			print "Friendship exists"
+		# Update cassandra
+		cass = Cassandra('beehive') 
+		cass.update_num_interaction_create(user_to_follow, self.hashtag)
+			
+	def is_following_user(self, user_to_follow):
+		curr_user = api.me().screen_name
+		print "ME: " + curr_user
+		print "target: " + user_to_follow
+		return api.show_friendship(target_screen_name=user_to_follow)[1].followed_by
+		
+	def unfollow_user(self, user_to_unfollow):
+		if self.is_following_user(user_to_follow):
+			api.destroy_friendship(screen_name=user_to_follow)
+		else:
+			print "Friendship doesn't exist, can't unfollow"
+		# Update cassandra
+		cass = Cassandra('beehive') 
+		cass.update_num_interaction_destroy(user_to_follow, self.hashtag)
+	
+
+# if __name__ == "__main__":
+	# s = Interact("ucla2016")
+	# s.follow_user('UCLAHonors')
