@@ -14,10 +14,10 @@ class Cassandra(object):
 	# output:																																			#
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
-	def new_hashtag(self, hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank):
-		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
+	def new_hashtag(self, hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
+		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?);""")
 		print query
-		self.session.execute(query,[hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank])
+		self.session.execute(query,[hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
 
 	def get_hashtag(self, hashtag):
 		query = "SELECT * FROM hashtagusers WHERE hashtag = '%s'" % hashtag
@@ -36,7 +36,43 @@ class Cassandra(object):
 			return None
 		else:
 			return res
-
+	
+	def get_user_hashtag(self, username, hashtag):
+		query = self.session.prepare("""SELECT * FROM hashtagusers WHERE hashtag = ? and username = ?;""")
+		res = self.session.execute(query, [hashtag, username])
+		if not res:
+			print "Could not find hashtag and username: %s" % hashtag
+			print username
+			return None
+		else:
+			return res
+			
+	# used to increment numinteractiosn everytime someone is followed
+	# numInteraction in users table is sum of all interactions in hashtagUser
+	def update_num_interaction_create(self, username, hashtag):
+		query1 = self.session.prepare("""UPDATE hashtagusers SET numinteractions = ? WHERE username = ? and hashtag = ?;""")
+		users = self.get_user_hashtag(username, hashtag)
+		if users:
+			for user in users:
+				num_to_update = user.numinteractions + 1
+				print num_to_update
+		else:
+			print "Error in database, trying to update interaction for non-existing user/hashtat"
+				
+		self.session.execute(query1, [num_to_update, username, hashtag])
+		
+	def update_num_interaction_destroy(self, username, hashtag):
+		query1 = self.session.prepare("""UPDATE hashtagusers SET numinteractions = ? WHERE username = ? and hashtag = ?;""")
+		users = self.get_user_hashtag(username, hashtag)
+		if users:
+			for user in users:
+				num_to_update = user.numinteractions - 1
+				print num_to_update
+		else:
+			print "Error in database, trying to update interaction for non-existing user/hashtat"
+				
+		self.session.execute(query1, [num_to_update, username, hashtag])
+	
 	###############################################################################
 	# func: 	new_user		 																												#
 	# input:	username, fullname, lastupdated, avelikes, averetweets, followers, 	#
@@ -105,3 +141,4 @@ class Cassandra(object):
 		
 		self.session.execute(query1, [user_rank, username, hashtag])
 		self.session.execute(query2, [user_rank, username, most_recent_updated])
+		

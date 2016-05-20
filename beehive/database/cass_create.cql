@@ -13,6 +13,7 @@ CREATE TABLE HashtagUsers (
 	avgRetweets float,
 	followers int,
 	numTweets int,
+	numInteractions int,
 	PRIMARY KEY (hashtag, username)
 );
 
