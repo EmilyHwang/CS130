@@ -84,34 +84,19 @@ def search():
         search = twitter_search.Search(query)
         
         # Get a list of users back
-        users_exist = search.search_users()
+        potential_influencers = search.search_users()
 
-        potential_influencers = None
-        # if we already have this information
-        if users_exist['exist']:
-            potential_influencers = users_exist['potential_influencers']
-
-        # We need to keep querying until we get all the data back (10 each time)
-        else:
-            potential_influencers = search.search_users_detail(users_exist['potential_influencers'])
-        
         global origData
-        origData = potential_influencers
+        origData = potential_influencers['first_10']
 
         links = []
-        for name in potential_influencers:
+        for name in potential_influencers['first_10']:
             links.append('https://twitter.com/' + name)
 
-        return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
+        return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
 
     else:
         return redirect('/search-page')
-
-############################################################################
-# ASYNC
-
-
-############################################################################
 
 @app.route('/search-page')
 def search_page():
@@ -192,15 +177,7 @@ def oauth_authorized(response):
 		return redirect(url_for('index'))
 
 	search = twitter_search.Search(query)
-	users_exist = search.search_users()
-	potential_influencers = None
-	# if we already have this information
-	if users_exist['exist']:
-		potential_influencers = users_exist['potential_influencers']
-
-	# We need to keep querying until we get all the data back (10 each time)
-	else:
-		potential_influencers = search.search_users_detail(users_exist['potential_influencers'])
+	potential_influencers = search.search_twitter()
 
 	links = []
 	for name in potential_influencers:
