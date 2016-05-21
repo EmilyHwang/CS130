@@ -19,16 +19,6 @@ MAX_TWEETS = 100
 MAX_USER_TIMELINE_TWEETS = 200
 MIN_NUM_OF_FOLLOWERS = 100
 
-# access_token = os.environ['ACCESS_TOKEN']
-# access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
-# consumer_key = os.environ['CONSUMER_KEY']
-# consumer_secret = os.environ['CONSUMER_SECRET']
-
-# auth = OAuthHandler(consumer_key, consumer_secret)
-# auth.set_access_token(access_token, access_token_secret)
-# api = API(auth, wait_on_rate_limit=True)
-
-
 class Search:
 	def __init__(self, query, auth, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
 		q = "#" + query
