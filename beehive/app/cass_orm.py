@@ -12,7 +12,7 @@ class Cassandra(object):
 		self.session = cluster.connect(self.keyspace)
 
 	###############################################################################
-	# func: 	new_hashtag  																												#
+	# func:		new_hashtag																													#
 	# input:	hashtag, username, tweettext, tweetcreated													#
 	# output:																																			#
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
@@ -79,8 +79,8 @@ class Cassandra(object):
 		self.session.execute(query1, [num_to_update, username, hashtag])
 	
 	###############################################################################
-	# func: 	new_user		 																												#
-	# input:	username, fullname, lastupdated, avelikes, averetweets, followers, 	#
+	# func:		new_user																														#
+	# input:	username, fullname, lastupdated, avelikes, averetweets, followers,	#
 	#					numappeared, numtweets, userrank																		#
 	# output:																																			#
 	# desc:		Insert a user with stats to the user table													#
@@ -114,7 +114,7 @@ class Cassandra(object):
 	
 	# user within given time range
 	def get_user_from_dates(self, user, date_beg, date_end):
-		query = session.prepare("""SELECT * from users where username=? and lastupdated > ? and lastupdated < ?;""")
+		query = self.session.prepare("""SELECT * from users where username=? and lastupdated > ? and lastupdated < ?;""")
 		res = self.session.execute(query, [user, date_beg, date_end])
 		if not res:
 			logfile.error("no user and timestamp in that date")
@@ -129,8 +129,8 @@ class Cassandra(object):
 
 	# used update both tables in user_rank.py
 	def update_user_rank(self, username, hashtag, user_rank):
-		query1 = session.prepare("""UPDATE hashtagusers SET userrank = ? WHERE username = ? and hashtag = ?;""")
-		query2 = session.prepare("""UPDATE users SET userrank = ? WHERE username = ? and lastupdated = ?;""")
+		query1 = self.session.prepare("""UPDATE hashtagusers SET userrank = ? WHERE username = ? and hashtag = ?;""")
+		query2 = self.session.prepare("""UPDATE users SET userrank = ? WHERE username = ? and lastupdated = ?;""")
 		
 		most_recent_users = self.get_most_recent_user(username)
 	
@@ -139,4 +139,16 @@ class Cassandra(object):
 		
 		self.session.execute(query1, [user_rank, username, hashtag])
 		self.session.execute(query2, [user_rank, username, most_recent_updated])
+
+	#####################################################
+	# USED FOR TESTING 
+	#################################################
+	def delete_hashtag(self, username, hashtag):
+		query1 = self.session.prepare("""DELETE FROM hashtagusers WHERE username = ? and hashtag = ?;""")
 		
+		self.session.execute(query1, [username, hashtag])
+
+	def delete_user(self, username, timestamp):
+		query1 = self.session.prepare("""DELETE FROM users WHERE username = ? and lastupdated = ?;""")
+			
+		self.session.execute(query1, [username, timestamp])
