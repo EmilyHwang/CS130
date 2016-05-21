@@ -105,13 +105,13 @@ def search_page():
 
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
-	print request.form
-	print origData
+	logfile.info("original data")
+	logfile.info(origData)
+
 	minFollowers = request.form['minFollowers']
 	maxFollowers = request.form['maxFollowers']
 
 	filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
-	print filtered_influencers
 	links = []
 	for name in filtered_influencers:
 		links.append('https://twitter.com/' + name)

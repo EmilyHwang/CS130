@@ -2,6 +2,9 @@ import datetime
 import re
 from cassandra.cluster import Cluster
 
+import logging
+logfile = logging.getLogger('file')
+
 class Cassandra(object):
 	def __init__(self,keyspace):
 		self.keyspace = keyspace
@@ -15,34 +18,36 @@ class Cassandra(object):
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
 	def new_hashtag(self, hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
+		logfile.info("Inserting/Updateing to hashtagusers table: #%s" % hashtag)
 		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?,?);""")
-		print query
 		self.session.execute(query,[hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
 
 	def get_hashtag(self, hashtag):
+		logfile.info("Query * from hashtagusers : #%s" % hashtag)
 		query = "SELECT * FROM hashtagusers WHERE hashtag = '%s'" % hashtag
 		res = self.session.execute(query)
 		if not res:
-			print "Could not find hashtag: %s" % hashtag
+			logfile.warning("Could not find hashtag: #%s" % hashtag)
 			return None
 		else:
 			return res
 			
 	def get_all_hashtags(self):
+		logfile.info("Get all hashtags")
 		query = "SELECT DISTINCT hashtag FROM hashtagusers"
 		res = self.session.execute(query)
 		if not res:
-			print "No hashtags in database"
+			logfie.warning("No hashtags in database")
 			return None
 		else:
 			return res
 	
 	def get_user_hashtag(self, username, hashtag):
+		logfile.info("Get * from hashtagusers table by username: %s and hashtag: %s" % (username, hashtag))
 		query = self.session.prepare("""SELECT * FROM hashtagusers WHERE hashtag = ? and username = ?;""")
 		res = self.session.execute(query, [hashtag, username])
 		if not res:
-			print "Could not find hashtag and username: %s" % hashtag
-			print username
+			logfile.warning("Could not find hashtag and username: %s, %s" % (hashtag, username))
 			return None
 		else:
 			return res
@@ -50,26 +55,26 @@ class Cassandra(object):
 	# used to increment numinteractiosn everytime someone is followed
 	# numInteraction in users table is sum of all interactions in hashtagUser
 	def update_num_interaction_create(self, username, hashtag):
+		logfile.info("Update Number interactions create for user %s and hashtag %s" % (username, hashtag))
 		query1 = self.session.prepare("""UPDATE hashtagusers SET numinteractions = ? WHERE username = ? and hashtag = ?;""")
 		users = self.get_user_hashtag(username, hashtag)
 		if users:
 			for user in users:
 				num_to_update = user.numinteractions + 1
-				print num_to_update
 		else:
-			print "Error in database, trying to update interaction for non-existing user/hashtat"
+			logfile.error("Error in database, trying to update interaction for non-existing user/hashtat")
 				
 		self.session.execute(query1, [num_to_update, username, hashtag])
 		
 	def update_num_interaction_destroy(self, username, hashtag):
+		logfile.info("Update Number interactions destroy for user %s and hashtag %s" % (username, hashtag))
 		query1 = self.session.prepare("""UPDATE hashtagusers SET numinteractions = ? WHERE username = ? and hashtag = ?;""")
 		users = self.get_user_hashtag(username, hashtag)
 		if users:
 			for user in users:
 				num_to_update = user.numinteractions - 1
-				print num_to_update
 		else:
-			print "Error in database, trying to update interaction for non-existing user/hashtat"
+			logfile.error("Error in database, trying to update interaction for non-existing user/hashtat")
 				
 		self.session.execute(query1, [num_to_update, username, hashtag])
 	
@@ -82,15 +87,13 @@ class Cassandra(object):
 	###############################################################################
 	def new_user(self, username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank):
 		query = self.session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
-		  
-		print query
 		self.session.execute(query, [username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank])
 
 	def get_user(self,username):
 		query = "SELECT * FROM users WHERE username = '%s'" % username
 		res = self.session.execute(query)
 		if not res:
-		  print "Could not find user: %s" % username
+		  logfile.error("Could not find user: %s" % username)
 		return res
 	
 	# the user with most recent timestamp
@@ -98,7 +101,7 @@ class Cassandra(object):
 		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated DESC limit 1" % username
 		res = self.session.execute(query)
 		if not res:
-		  print "Could not find user: %s" % username
+		  logfile.error("Could not find user: %s" % username)
 		return res
 		
 	# user with oldest timestamp
@@ -106,7 +109,7 @@ class Cassandra(object):
 		query = "SELECT * FROM users WHERE username = '%s' ORDER BY lastupdated ASC limit 1" % username
 		res = self.session.execute(query)
 		if not res:
-		  print "Could not find user: %s" % username
+		  logfile.error("Could not find user: %s" % username)
 		return res
 	
 	# user within given time range
@@ -114,7 +117,7 @@ class Cassandra(object):
 		query = session.prepare("""SELECT * from users where username=? and lastupdated > ? and lastupdated < ?;""")
 		res = self.session.execute(query, [user, date_beg, date_end])
 		if not res:
-			print "no user and timestamp in that date"
+			logfile.error("no user and timestamp in that date")
 			return None
 		else:
 			return res
