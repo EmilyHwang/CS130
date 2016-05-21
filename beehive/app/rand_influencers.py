@@ -38,7 +38,6 @@ def find_users(number):
 	cur.execute("SELECT subCategoryId FROM Categories ORDER BY RAND() LIMIT %s", (number,))
 	subCatIds = cur.fetchall()
 	for id in subCatIds:
-		print id
 		cur2 = db.cursor()
 		cur2.execute("""SELECT username FROM SubCategoryPeople WHERE subCategoryId = %s""", id)
 		(username,) = cur2.fetchone()

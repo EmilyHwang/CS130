@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import MySQLdb
 import string
+import logging
+logfile = logging.getLogger('file')
 
 # returns all categories and subcategories like:
 # { {categoryName, [subCategory, subCategory, ...] }, ... }
@@ -17,7 +19,7 @@ def getAllCategories():
     categories = []
     cur_main.execute("SELECT DISTINCT categoryName from Categories")
     main_cats = cur_main.fetchall()
-    print main_cats
+    logfile.info(main_cats)
     # use tuple to strip extra syntax
     for (cat,) in main_cats:
         cur_sub = db.cursor()
@@ -30,6 +32,6 @@ def getAllCategories():
         entry = {}
         entry['categoryName'] = cat
         entry['subCategories'] = pretty_sub_cats
-        print entry
+        logfile.info(entry)
         categories.append(entry)
     return categories

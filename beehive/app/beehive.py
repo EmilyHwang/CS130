@@ -71,6 +71,7 @@ def search():
 	twitter_token = session.get('twitter_token')
 	if twitter_token is None:
 		logfile.info("User is not logged in. Redirect")
+		logconsole.info("User is not logged in. Redirect")
 		session.clear()
 		session['query'] = request.form['user-input']
 		return redirect(url_for('login'))
