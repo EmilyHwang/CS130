@@ -11,6 +11,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>
 
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <link href="http://getbootstrap.com/assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
@@ -66,11 +67,10 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li id="nav-login">
-                    <a href="/login">
                     {% if session['screen_name'] is defined %}
-                        {{ session['screen_name'] }}
+                        <span> {{ session['screen_name'] }} <small>&nbsp;&nbsp;&nbsp;<a href="/logout">Logout</a></small></span>
                     {% else %}
-                        Login
+                        <span><a style="color:white;" href="/login"> Login </a></span>
                     {% endif %}
                     </a>
                 </li>
