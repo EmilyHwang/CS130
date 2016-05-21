@@ -11,11 +11,11 @@ class UserAuth:
 		self.auth.set_access_token(access_token, access_token_secret)	
 	
 	def create_api(self):
-		return API(self.auth, wait_on_rate_limit=True)
+		return API(self.auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, retry_count=2, retry_delay=2, retry_errors=set([500, 503]))
 
 class AppAuth:
 	def __init__(self, consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET):
 		self.auth = AppAuthHandler(consumer_key, consumer_secret)
 	
 	def create_api(self):
-		return API(self.auth, wait_on_rate_limit=True)
+		return API(self.auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, retry_count=2, retry_delay=2, retry_errors=set([500, 503]))
