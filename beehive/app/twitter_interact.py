@@ -24,10 +24,10 @@ class Interact:
 		return self.api.show_friendship(target_screen_name=user_to_follow)[1].followed_by
 		
 	def unfollow_user(self, user_to_unfollow):
-		if self.is_following_user(user_to_follow):
-			self.api.destroy_friendship(screen_name=user_to_follow)
+		if self.is_following_user(user_to_unfollow):
+			self.api.destroy_friendship(screen_name=user_to_unfollow)
 		else:
 			print "Friendship doesn't exist, can't unfollow"
 		# Update cassandra
 		cass = Cassandra('beehive') 
-		cass.update_num_interaction_destroy(user_to_follow, self.hashtag)
+		cass.update_num_interaction_destroy(user_to_unfollow, self.hashtag)
