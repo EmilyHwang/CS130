@@ -52,6 +52,7 @@ class Search:
 		self.cass = Cassandra('beehive') 
 	
 	def get_users_and_hashtags(self):
+		print "========= Get User And Hashtag ==========="
 		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
 
 		query_results = []
@@ -78,10 +79,6 @@ class Search:
 
 				hashtag_list = tweet.entities['hashtags']
 				hashtags.extend([hashtag['text'] for hashtag in hashtag_list])
-
-		print "Get_Users_And_Hashtags ============ "
-		print "Total Number of users: %d" % len(users)
-
 		return [users, set(mentioned_users), hashtags]
 
 	# -----------------------------------------------------------------------
@@ -90,7 +87,10 @@ class Search:
 	# returns: json
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
+		print "========= Query User Timeline ==========="
+		print "-- Looking at user %s's timeline ..." % user 
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
+		print "-- Finish looking at user's timeline, time for calculation!"
 		
 		last_status = None
 
@@ -117,6 +117,7 @@ class Search:
 
 	
 	def update_cassandra(self, potential_influencers):
+		print "========= Updating Cassandra ==========="
 		query = self.hashtag
 
 		for user in potential_influencers:
@@ -135,7 +136,7 @@ class Search:
 				potential_influencers[user]['userRank'] = rank
 				
 			else: # user already associated with another hashtag. need to update time appeared
-				print "User %s exits, update time"
+				print "-- User %s exits, update time"
 				cassUsers = self.cass.get_most_recent_user(user)
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
@@ -160,6 +161,7 @@ class Search:
 	# 	10 users information
 	# -----------------------------------------------------------------------
 	def search_users_detail(self, users):
+		print "========= SEARCH USERS DETAIL ==========="
 		count = 0
 		potential_influencers = {}
 
@@ -167,11 +169,10 @@ class Search:
 		# 	return {'first_10': {}, 'leftover': {}}
 		
 		if type(users) is dict:
-			print "This is a fresh set of results, need to query Twitter API"
+			print "-- This is a fresh set of results, need to query Twitter API"
 			# this is a result from get_users_and_hashtags 
 			leftover = users.copy()
 			for user in users:
-				print "Looking at user %s's timeline ..." % user 
 				user_info = self.query_user_timeline(user)
 				if user_info is not None:
 					all_info = users[user].copy()
@@ -181,13 +182,10 @@ class Search:
 
 				count += 1
 				if count == 10:
-					print "Finish looking up 10 users, time to return!"
+					print "---- Finish looking up 10 users, time to return!"
 					self.update_cassandra(potential_influencers)
-					print "======================================="
-					print leftover
 					return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': leftover}
-			
-			print "All users found!"
+
 			self.update_cassandra(potential_influencers)
 			return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': {}}
 
@@ -198,7 +196,7 @@ class Search:
 			for user in users:
 				# If we already spend time searching for 10 users, we don't want to do it anymore
 				if user.followers == 0 and count == 10:
-					print "Finish looking up 10 users, time to return!"
+					print "-- Finish looking up 10 users, time to return!"
 					# Iterate the rest of the un-updated one and return
 					user_update_queue[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated}
 
@@ -206,12 +204,11 @@ class Search:
 				else:
 					# Check whether it needs to use Twitter API or not					
 					if user.followers != 0:
-						print "User %s has information in our database! No need to API" % user.username
+						print "-- User %s has information in our database! No need to API" % user.username
 						potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets}
 					else:
 						# This object is a cassandra object but it's not updated
-						print "User %s doesn't have information :( Search API" % user.username
-						print "Looking at user %s's timeline ..." % user.username 
+						print "-- User %s doesn't have information :( Search API" % user.username
 						user_info = self.query_user_timeline(user.username)
 						if user_info is not None:
 							potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user_info['followers'], 'numTweets': user_info['numTweets'], 'avgLikes': user_info['avgLikes'], 'avgRetweets': user_info['avgRetweets']}
@@ -278,8 +275,6 @@ class Search:
 				if users is not None:
 					potential_influencers = self.search_users_detail(users)
 
-					#update timesearched
-					print "timesSearched: " + str(data['timeSearched'])
 					try:
 						self.cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
 						self.db.commit()
