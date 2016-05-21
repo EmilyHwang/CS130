@@ -68,7 +68,7 @@
             <ul class="nav navbar-nav navbar-right">
                 <li id="nav-login">
                     {% if session['screen_name'] is defined %}
-                        <span> {{ session['screen_name'] }} <small>&nbsp;&nbsp;&nbsp;<a href="/logout">Logout</a></small></span>
+                        <span> <span style="color:#ebd467;">{{ session['screen_name'] }}</span> <small>&nbsp;&nbsp;&nbsp;<a style="color:white;" href="/logout">Logout</a></small></span>
                     {% else %}
                         <span><a style="color:white;" href="/login"> Login </a></span>
                     {% endif %}
