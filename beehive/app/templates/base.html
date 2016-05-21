@@ -67,11 +67,10 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li id="nav-login">
-                    <a href="/login">
                     {% if session['screen_name'] is defined %}
-                        {{ session['screen_name'] }}
+                        <span> {{ session['screen_name'] }} <small>&nbsp;&nbsp;&nbsp;<a href="/logout">Logout</a></small></span>
                     {% else %}
-                        Login
+                        <span><a style="color:white;" href="/login"> Login </a></span>
                     {% endif %}
                     </a>
                 </li>

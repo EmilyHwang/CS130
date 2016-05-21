@@ -12,7 +12,9 @@ html, body {
     font-size: 16px;
 }
 
-.navbar-nav > li > a, .navbar-brand {
+.navbar-brand,
+.navbar-nav > li > a,
+.navbar-right {
     padding-top:32px !important;
     padding-left:34px !important;
     padding-right:34px !important;
@@ -31,6 +33,11 @@ html, body {
     background-color: #ebd467;
     color: #2c2e38;
 }
+
+.nav-name {
+    font-weight:700;
+}
+
 
 .lead {
     font-weight: 700;
