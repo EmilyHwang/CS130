@@ -26,10 +26,10 @@ def getAllCategories():
         # strip extra syntax and format ampersands
         pretty_sub_cats = []
         for (sub_cat, ) in sub_cats:
-            pretty_sub_cats.append( string.replace(sub_cat, '&amp;', '&') )
+            pretty_sub_cats.append(string.replace(sub_cat, '&amp;', '&'))
         entry = {}
-        entry['categoryName'] = cat;
-        entry['subCategories'] = pretty_sub_cats;
+        entry['categoryName'] = cat
+        entry['subCategories'] = pretty_sub_cats
         print entry
         categories.append(entry)
     return categories
