@@ -90,7 +90,6 @@ class Search:
 		print "========= Query User Timeline ==========="
 		print "-- Looking at user %s's timeline ..." % user 
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
-		print "-- Finish looking at user's timeline, time for calculation!"
 		
 		last_status = None
 
@@ -98,12 +97,16 @@ class Search:
 		retweet_count_sum = 0
 		total_num_tweets = 0
 
+		starttime = time.time()
 		for status in data:
 			last_status = status
 			total_num_tweets += 1
 			favorite_count_sum += status.favorite_count
 			retweet_count_sum += status.retweet_count
+		elapsed_time = time.time() - starttime
+		print "Loop takes: %s seconds" % elapsed_time
 
+		starttime = time.time()
 		if last_status is None:
 			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 
@@ -113,7 +116,9 @@ class Search:
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
 			
-			return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
+		elapsed_time = time.time() - starttime
+		print "If else takes %s seconds" % elapsed_time
+		return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
 
 	
 	def update_cassandra(self, potential_influencers):
