@@ -6,6 +6,8 @@ import pdb
 import categories
 import filter_influencers
 import twitter_search
+import twitter_auth
+import twitter_interact
 
 # Configurations
 DEBUG = True
@@ -23,13 +25,13 @@ app.secret_key = SECRET_KEY
 # For user-level authentication
 oauth = OAuth()
 twitter_oauth = oauth.remote_app('twitter',
-                                 base_url='https://api.twitter.com/1/',
-                                 request_token_url='https://api.twitter.com/oauth/request_token',
-                                 access_token_url='https://api.twitter.com/oauth/access_token',
-                                 authorize_url='https://api.twitter.com/oauth/authenticate',
-                                 consumer_key=twitter_search.consumer_key,
-                                 consumer_secret=twitter_search.consumer_secret
-                                 )
+								 base_url='https://api.twitter.com/1/',
+								 request_token_url='https://api.twitter.com/oauth/request_token',
+								 access_token_url='https://api.twitter.com/oauth/access_token',
+								 authorize_url='https://api.twitter.com/oauth/authenticate',
+								 consumer_key=twitter_auth.CONSUMER_KEY,
+								 consumer_secret=twitter_auth.CONSUMER_SECRET
+								 )
 
 
 @twitter_oauth.tokengetter
@@ -61,16 +63,20 @@ def index():
 @app.route('/search', methods=['POST'])
 def search():
 	# Before completing the search, first make sure that the user is logged in.
-	access_token = session.get('twitter_token')
-	if access_token is None:
+	twitter_token = session.get('twitter_token')
+	if twitter_token is None:
 		session.clear()
 		session['query'] = request.form['user-input']
 		return redirect(url_for('login'))
 
 	if request.method == 'POST':
+		access_token = twitter_token[0]
+		access_token_secret = twitter_token[1]
+		auth = twitter_auth.UserAuth(access_token, access_token_secret)
+		
 		global query
 		query = request.form['user-input']
-		search = twitter_search.Search(query)
+		search = twitter_search.Search(query, auth)
 
 		# Get a list of users back
 		potential_influencers = search.search_users()
@@ -83,7 +89,6 @@ def search():
 			links.append('https://twitter.com/' + name)
 
 		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
-
 	else:
 		return redirect('/search-page')
 
@@ -120,18 +125,6 @@ def getInfluencersByCategory(category):
 	return render_template('index.html', users=users, links=links, categories=cats)
 
 
-'''
-@app.route('/search', methods=['POST', 'GET'])
-def search():
-	if request.method == 'POST':
-		searchword = request.form['searchterm']
-		potential_influencers = twitter.search_twitter(searchword)
-		return render_template('search_result.html', potential_influencers=potential_influencers)
-	else:
-		data = {}
-		return render_template('search.html', data=data)
-'''
-
 @app.route('/login')
 def login():
 	return twitter_oauth.authorize(callback=url_for('oauth_authorized',
@@ -153,8 +146,8 @@ def oauth_authorized(response):
 		return redirect(next_url)
 
 	# Since auth is defined in twitter.py. Later change twitter to twitter_search
-	twitter_search.access_token = response['oauth_token']
-	twitter_search.access_token_secret = response['oauth_token_secret']
+	access_token = response['oauth_token']
+	access_token_secret = response['oauth_token_secret']
 	session['screen_name'] = response['screen_name']
 
 	session['twitter_token'] = (
@@ -163,23 +156,25 @@ def oauth_authorized(response):
 	)
 
 	# For web apps, we need to re-build the auth handler...
-	twitter_search.auth = OAuthHandler(twitter_search.consumer_key, twitter_search.consumer_secret)
-	twitter_search.auth.set_access_token(twitter_search.access_token, twitter_search.access_token_secret)
-	twitter_search.api = API(twitter_search.auth, wait_on_rate_limit=True)
+	auth = twitter_auth.UserAuth(access_token, access_token_secret)
 
 	query = session.get('query')
 	if query is None:
 		return redirect(url_for('index'))
 
-	search = twitter_search.Search(query)
-	potential_influencers = search.search_twitter()
+	search = twitter_search.Search(query, auth)
+
+	# Get a list of users back
+	potential_influencers = search.search_users()
+
+	global origData
+	origData = potential_influencers['first_10']
 
 	links = []
-	for name in potential_influencers:
+	for name in potential_influencers['first_10']:
 		links.append('https://twitter.com/' + name)
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
-
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
 
 @app.route('/about')
 def about():
@@ -191,13 +186,17 @@ def about():
 def contact():
 	data = {}
 	return render_template('contact.html', data=data)
-	
+
 @app.route('/follow', methods=['POST'])
 def follow():
-	print "here"
+	twitter_token = session.get('twitter_token')
 	user_to_follow = request.form['user-to-follow']
-	interaction = twitter_search.Interact(query)
-	interaction.follow_user(user_to_follow)
+	if twitter_token:
+		access_token = twitter_token[0]
+		access_token_secret = twitter_token[1]
+		auth = twitter_auth.UserAuth(access_token, access_token_secret)
+		interaction = twitter_interact.Interact(query, auth)
+		interaction.follow_user(user_to_follow)
 	potential_influencers = origData
 
 	links = []
