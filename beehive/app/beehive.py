@@ -36,13 +36,13 @@ thread = None
 # For user-level authentication
 oauth = OAuth()
 twitter_oauth = oauth.remote_app('twitter',
-                                 base_url='https://api.twitter.com/1/',
-                                 request_token_url='https://api.twitter.com/oauth/request_token',
-                                 access_token_url='https://api.twitter.com/oauth/access_token',
-                                 authorize_url='https://api.twitter.com/oauth/authenticate',
-                                 consumer_key=twitter_auth.CONSUMER_KEY,
-                                 consumer_secret=twitter_auth.CONSUMER_SECRET
-                                 )
+								 base_url='https://api.twitter.com/1/',
+								 request_token_url='https://api.twitter.com/oauth/request_token',
+								 access_token_url='https://api.twitter.com/oauth/access_token',
+								 authorize_url='https://api.twitter.com/oauth/authenticate',
+								 consumer_key=twitter_auth.CONSUMER_KEY,
+								 consumer_secret=twitter_auth.CONSUMER_SECRET
+								 )
 
 
 @twitter_oauth.tokengetter
@@ -100,7 +100,6 @@ def search():
 			links.append('https://twitter.com/' + name)
 
 		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
-
 	else:
 		return redirect('/search-page')
 
@@ -136,18 +135,6 @@ def getInfluencersByCategory(category):
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
-
-'''
-@app.route('/search', methods=['POST', 'GET'])
-def search():
-	if request.method == 'POST':
-		searchword = request.form['searchterm']
-		potential_influencers = twitter.search_twitter(searchword)
-		return render_template('search_result.html', potential_influencers=potential_influencers)
-	else:
-		data = {}
-		return render_template('search.html', data=data)
-'''
 
 @app.route('/login')
 def login():
@@ -200,7 +187,6 @@ def oauth_authorized(response):
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
 
-
 @app.route('/about')
 def about():
 	data = {}
@@ -211,7 +197,7 @@ def about():
 def contact():
 	data = {}
 	return render_template('contact.html', data=data)
-	
+
 @app.route('/follow', methods=['POST'])
 def follow():
 	twitter_token = session.get('twitter_token')
@@ -231,4 +217,4 @@ def follow():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=DEBUG)
+	socketio.run(app, debug=DEBUG)

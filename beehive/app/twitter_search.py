@@ -292,8 +292,8 @@ class Search:
 					print "mysql and cassandra databases out of sync. Search user detail?"
 					return {}
 		
-	
+
 
 # if __name__ == "__main__":
-	# s = Interact("ucla2016")
-	# s.follow_user('UCLAHonors')
+    # s = Interact("ucla2016")
+    # s.follow_user('UCLAHonors')

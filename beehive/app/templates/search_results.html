@@ -17,6 +17,10 @@
         .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
             background-color: #464553;
         }
+        .follow-btn {
+            background-color: #ebd467;
+            color: #2c2e38;
+        }
     </style>
 {% endblock styles %}
 
@@ -80,6 +84,7 @@
                             <th class="text-center">Avg # of Favorites</th>
                             <th class="text-center">Avg # of Retweets</th>
                             <th class="text-center">Influencer Ranking</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="resultsTable">
@@ -92,10 +97,12 @@
 							<td class="text-center">{{ influencer_info['avgLikes'] }}</td>
 							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
 							<td class="text-center">{{influencer_info['userRank'] }}</td>
+                            <td>
 							<form action="/follow" method="post">
-								<input type="hidden" value="{{ influencer }}" name="user-to-follow"></input>
-								<td><button type="submit">Follow</button></td>
+								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
+								<button class="btn follow-btn" type="submit">Follow</button>
 							</form>
+                            </td>
 							{% set i = i + 1 %}
                         </tr>
                     {% endfor %}
