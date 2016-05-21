@@ -6,6 +6,7 @@ Use Beehive;
 CREATE TABLE HashtagUsers (
 	hashtag text,
 	username text,
+	fullname text,
 	userRank double,
 	tweetText text,
 	tweetCreated timestamp,

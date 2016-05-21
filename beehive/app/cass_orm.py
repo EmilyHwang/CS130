@@ -14,10 +14,10 @@ class Cassandra(object):
 	# output:																																			#
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
-	def new_hashtag(self, hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
-		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?);""")
+	def new_hashtag(self, hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
+		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?,?);""")
 		print query
-		self.session.execute(query,[hashtag, username, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
+		self.session.execute(query,[hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
 
 	def get_hashtag(self, hashtag):
 		query = "SELECT * FROM hashtagusers WHERE hashtag = '%s'" % hashtag
@@ -107,11 +107,6 @@ class Cassandra(object):
 		res = self.session.execute(query)
 		if not res:
 		  print "Could not find user: %s" % username
-		return res
-
-	def get_user_from_hashtag(self,hashtag):
-		query = "SELECT username FROM hashtagusers WHERE hashtag = '%s'" % hashtag
-		res = self.session.execute(query)
 		return res
 	
 	# user within given time range
