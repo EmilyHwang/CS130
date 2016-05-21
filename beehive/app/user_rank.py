@@ -7,7 +7,7 @@ class UserRank:
 		self.cass = cass
 
 
-	def __get_followers_growth(self, user):
+	def get_followers_growth(self, user):
 		last_week = datetime.now()-timedelta(days=7)
 		last_beg = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
 		last_end = last_week.replace(hour=23, minute=59, second=59)
@@ -21,6 +21,9 @@ class UserRank:
 			else:
 				print "Most recent user is within 1 day"
 				curr_user = most_recent_user
+				if not curr_user:
+					print "no user exists"
+					return 0
 
 		last_users = self.cass.get_user_from_dates(user, last_beg, last_end)
 
@@ -47,7 +50,7 @@ class UserRank:
 			users = self.cass.get_hashtag(hashtag)
 			for user in users:
 				print user
-				followers_growth = self.__get_followers_growth(user.username)
+				followers_growth = self.get_followers_growth(user.username)
 				user_rank = self.calculate_user_rank(user.avglikes, user.avgretweets, user.followers, user.numtweets, followers_growth, user.numinteractions)
 
 				if user_rank != user.userrank:
@@ -56,5 +59,6 @@ class UserRank:
 					self.cass.update_user_rank(user.username, hashtag.hashtag, user_rank)
 
 if __name__ == "__main__":
-	userrank = UserRank()
+	cass = Cassandra('beehive')
+	userrank = UserRank(cass)
 	userrank.update_users_rank()
