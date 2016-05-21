@@ -20,13 +20,13 @@ class HashtagUsers:
 		for hashtag in hashtagSets:
 			hashtag = hashtag[1:]
 			s = Search(hashtag)
-			
 			# Do new searches
-			potential_influencers = s.search_twitter_api(hashtag)
-			# Update the hashtag timestamp in MySQL
-			self.mysql.updateHashtag(hashtag)
-			# Update the Cassandra table
-			s.update_cassandra(potential_influencers)
+			potential_influencers = s.search_users()
+			leftover = potential_influencers['leftover']
+
+			while len(leftover) != 0:
+				potential_influencers = s.search_users_detail(leftover)
+				leftover = potential_influencers['leftover']
 
 if __name__ == "__main__":
 	y = HashtagUsers()
