@@ -8,10 +8,12 @@ import os, sys, MySQLdb, datetime, time
 from cass_orm import Cassandra
 from mysql_orm import MySQL
 from twitter_search import Search
+from twitter_auth import AppAuth
 
 class HashtagUsers:
-	def __init__(self):
+	def __init__(self, auth):
 		self.mysql = MySQL("beehive")
+		self.auth = auth
 
 	def update(self):
 		# Get all the hashtags from MySQL table
@@ -19,7 +21,7 @@ class HashtagUsers:
 		# For each hashtag
 		for hashtag in hashtagSets:
 			hashtag = hashtag[1:]
-			s = Search(hashtag)
+			s = Search(hashtag, self.auth)
 			# Do new searches
 			potential_influencers = s.search_users()
 			leftover = potential_influencers['leftover']
@@ -29,5 +31,7 @@ class HashtagUsers:
 				leftover = potential_influencers['leftover']
 
 if __name__ == "__main__":
-	y = HashtagUsers()
+	auth = AppAuth()
+	y = HashtagUsers(auth)
+	
 	y.update()

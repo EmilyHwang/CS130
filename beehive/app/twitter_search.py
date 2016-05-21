@@ -19,22 +19,24 @@ MAX_TWEETS = 100
 MAX_USER_TIMELINE_TWEETS = 200
 MIN_NUM_OF_FOLLOWERS = 100
 
-access_token = os.environ['ACCESS_TOKEN']
-access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
-consumer_key = os.environ['CONSUMER_KEY']
-consumer_secret = os.environ['CONSUMER_SECRET']
+# access_token = os.environ['ACCESS_TOKEN']
+# access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
+# consumer_key = os.environ['CONSUMER_KEY']
+# consumer_secret = os.environ['CONSUMER_SECRET']
 
-auth = OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = API(auth, wait_on_rate_limit=True)
+# auth = OAuthHandler(consumer_key, consumer_secret)
+# auth.set_access_token(access_token, access_token_secret)
+# api = API(auth, wait_on_rate_limit=True)
 
 
 class Search:
-	def __init__(self, query, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
+	def __init__(self, query, auth, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
 		q = "#" + query
 		self.hashtag = q.lower()
 		self.max_tweets = max_tweets
 		self.max_user_timeline_tweets = max_user_timeline_tweets
+		self.auth = auth
+		self.api = auth.create_api()
 
 		# Connect to MySQLdb
 		self.db = MySQLdb.connect(host="localhost",    # your host, usually localhost
@@ -50,7 +52,7 @@ class Search:
 		self.cass = Cassandra('beehive') 
 	
 	def get_users_and_hashtags(self):
-		data = Cursor(api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
+		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
 
 		query_results = []
 		mentioned_users = []
@@ -88,7 +90,7 @@ class Search:
 	# returns: json
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
-		data = Cursor(api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
+		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
 		
 		last_status = None
 
@@ -126,7 +128,7 @@ class Search:
 			
 			cassUsers = self.cass.get_user(user)
 			if not cassUsers:
-				print "Inserting user: %s" % (user_info['fullname'])
+				#print "Inserting user: %s" % (user_info['fullname'])
 				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
 				
 				self.cass.new_hashtag(query, user, user_info['fullname'], user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0)
@@ -183,11 +185,11 @@ class Search:
 					self.update_cassandra(potential_influencers)
 					print "======================================="
 					print leftover
-					return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['followers'], reverse=True)), 'leftover': leftover}
+					return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': leftover}
 			
 			print "All users found!"
 			self.update_cassandra(potential_influencers)
-			return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['followers'], reverse=True)), 'leftover': {}}
+			return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': {}}
 
 		else:
 			# This is a Cassandra Object
@@ -216,7 +218,7 @@ class Search:
 						count += 1
 
 			self.update_cassandra(potential_influencers)
-			return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['followers'], reverse=True)), 'leftover': user_update_queue}
+			return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': user_update_queue}
 	
 	# ----------------------------------------------------------------------
 	# parameters: 
@@ -290,34 +292,6 @@ class Search:
 					print "mysql and cassandra databases out of sync. Search user detail?"
 					return {}
 		
-
-class Interact:
-	def __init__(self, query):
-		self.hashtag = "#" + query
-		
-	def follow_user(self, user_to_follow):
-		if not self.is_following_user(user_to_follow):
-			api.create_friendship(screen_name=user_to_follow)
-		else:
-			print "Friendship exists"
-		# Update cassandra
-		cass = Cassandra('beehive') 
-		cass.update_num_interaction_create(user_to_follow, self.hashtag)
-			
-	def is_following_user(self, user_to_follow):
-		curr_user = api.me().screen_name
-		print "ME: " + curr_user
-		print "target: " + user_to_follow
-		return api.show_friendship(target_screen_name=user_to_follow)[1].followed_by
-		
-	def unfollow_user(self, user_to_unfollow):
-		if self.is_following_user(user_to_follow):
-			api.destroy_friendship(screen_name=user_to_follow)
-		else:
-			print "Friendship doesn't exist, can't unfollow"
-		# Update cassandra
-		cass = Cassandra('beehive') 
-		cass.update_num_interaction_destroy(user_to_follow, self.hashtag)
 	
 
 # if __name__ == "__main__":
