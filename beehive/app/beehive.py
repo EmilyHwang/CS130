@@ -9,8 +9,11 @@ import twitter_search
 import twitter_auth
 import twitter_interact
 
+# Logging
+import logging, logging.config, yaml
+
 # Configurations
-DEBUG = True
+DEBUG = False
 DATABASE = ''
 SECRET_KEY = 'SUPER SECRET CIA_FBI_NSA DEVELOPMENT KEY'
 USER_NAME = ''
@@ -48,9 +51,11 @@ def index():
 	# 'data' is a variable that passes info to template for rendering
 	# So for example, place stuff we retrieve from the database, api call, etc. into data
 	#data = {}
-
+	logfile.info('==== Landing Page ====')
+	logfile.info('Get all categories')
 	cats = categories.getAllCategories();
 
+	logfile.info('Get random influencers from subcategory')
 	users = rand_influencers.get_users(3)
 
 	links = []
@@ -65,6 +70,7 @@ def search():
 	# Before completing the search, first make sure that the user is logged in.
 	twitter_token = session.get('twitter_token')
 	if twitter_token is None:
+		logfile.info("User is not logged in. Redirect")
 		session.clear()
 		session['query'] = request.form['user-input']
 		return redirect(url_for('login'))
@@ -76,9 +82,9 @@ def search():
 		
 		global query
 		query = request.form['user-input']
-		search = twitter_search.Search(query, auth)
+		logfile.info("Search initiated for hashtag: #%s" % query)
 
-		# Get a list of users back
+		search = twitter_search.Search(query, auth)
 		potential_influencers = search.search_users()
 
 		global origData
@@ -206,4 +212,16 @@ def follow():
 
 
 if __name__ == '__main__':
-    app.run()
+	# set up logging to file
+	logging.config.dictConfig(yaml.load(open('logging.conf')))
+	logfile = logging.getLogger('file')
+	logconsole = logging.getLogger('console')
+
+	# Turn off Werkzeug debugger
+	werk = logging.getLogger('werkzeug')
+	werk.disabled = True
+	# log.setLevel(logging.ERROR)
+
+	logconsole.info('Start Application')
+	logfile.info('Start Application')
+	app.run()
