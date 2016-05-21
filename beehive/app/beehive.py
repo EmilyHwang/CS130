@@ -9,10 +9,6 @@ import twitter_search
 import twitter_auth
 import twitter_interact
 
-from flask_socketio import SocketIO, emit, disconnect
-from threading import Thread
-import eventlet
-
 # Configurations
 DEBUG = True
 DATABASE = ''
@@ -20,17 +16,10 @@ SECRET_KEY = 'SUPER SECRET CIA_FBI_NSA DEVELOPMENT KEY'
 USER_NAME = ''
 PASSWORD = ''
 
-# monkey patching is necessary because this application uses a background
-# thread
-async_mode = 'eventlet'
-eventlet.monkey_patch()
-
 # Create Flask application
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.secret_key = SECRET_KEY
-socketio = SocketIO(app, async_mode=async_mode)
-thread = None
 
 
 # For user-level authentication
@@ -217,4 +206,4 @@ def follow():
 
 
 if __name__ == '__main__':
-	socketio.run(app, debug=DEBUG)
+    app.run()
