@@ -14,8 +14,8 @@ html, body {
 
 .navbar-nav > li > a, .navbar-brand {
     padding-top:32px !important;
-    padding-left:32px !important;
-    padding-right:32px !important;
+    padding-left:34px !important;
+    padding-right:34px !important;
     padding-bottom:0 !important;
     height: 82px;
 }
@@ -30,6 +30,10 @@ html, body {
 .navbar-inverse .navbar-nav>.active>a:hover  {
     background-color: #ebd467;
     color: #2c2e38;
+}
+
+.lead {
+    font-weight: 700;
 }
 
 h1, h2 {
