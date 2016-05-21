@@ -63,7 +63,7 @@
     <span class="text-left"><h2>Browse Influencers By Category</h2></span>
     {% for entry in categories %}
         <div class="text-left">
-                {{ entry['categoryName'] }} :
+                <span class="category-name">{{ entry['categoryName'] }} :</span>
             {% for subcategory in entry['subCategories'] %}
                 <span class="category-clickable"><a href="/influencers/{{subcategory}}" target="_self">
                     {{ subcategory }}

@@ -137,6 +137,12 @@ def login():
 									next=request.args.get('next') or request.referrer or None))
 
 
+@app.route('/logout')
+def logout():
+	session.clear()
+	return redirect('/index')
+
+
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
 def oauth_authorized(response):
