@@ -9,7 +9,7 @@ def getAllCategories():
     db = MySQLdb.connect(host="localhost",    # your host, usually localhost
                          user="",         # your username
                          passwd="",  # your password
-                         db="")
+                         db="beehive")
 
     # create cursor object to execute query
     cur_main = db.cursor()
