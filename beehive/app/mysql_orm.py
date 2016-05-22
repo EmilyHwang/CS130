@@ -24,3 +24,10 @@ class MySQL(object):
 			self.db.commit()
 		except:
 			self.db.rollback()
+
+	def findHashtag(self, hashtag):
+		self.cur.execute("""SELECT hashtag FROM Hashtags WHERE hashtag=%s;""", (hashtag,))
+		if self.cur.fetchone() is None:
+			return False
+		else:
+			return True
