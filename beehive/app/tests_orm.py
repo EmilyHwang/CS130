@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 from cass_orm import Cassandra
+from mysql_orm import MySQL
 
 class CassOrmTestCase(unittest.TestCase):
 	def setUp(self):
@@ -90,12 +91,18 @@ class CassOrmTestCase(unittest.TestCase):
 class MySqlOrmTestCase(unittest.TestCase):
 	def setUp(self):
 		"""Call before every test case."""
-		#insert user to database
-		pass
+		self.mysql = MySQL('beehive')
+		self.mysql.newHashtag('#testHash')
 		
 	def tearDown(self):
 		"""Call after every test case."""
 		pass
+
+	def findHashtag(self):
+		data = self.mysql.findHashtag('#testHash')
+		self.assertIsNotNone(data)
+		data = self.mysql.findHashtag('sldfs')
+		self.assertIsNone(data)
 
 if __name__ == "__main__":
 	unittest.main() # run all tests
