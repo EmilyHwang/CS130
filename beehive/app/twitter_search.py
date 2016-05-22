@@ -84,7 +84,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
 		logfile.info("========= Query User Timeline ===========")
-		logfile.info("-- Looking at user %s's timeline ..." % user )
+		logfile.info("Looking at user %s's timeline ..." % user )
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
 		
 		last_status = None
@@ -187,7 +187,7 @@ class Search:
 			user_update_queue = {}
 			for user in users:
 				# If we already spend time searching for 10 users, we don't want to do it anymore
-				if user.followers == 0 and count == 10:
+				if user.followers == 0 and count >= 10:
 					# Iterate the rest of the un-updated one and return
 					user_update_queue[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated}
 
@@ -201,8 +201,9 @@ class Search:
 						# This object is a cassandra object but it's not updated
 						logfile.info("User %s doesn't have information :( Search API" % user.username)
 						user_info = self.query_user_timeline(user.username)
-						if user_info is not None:
+						if user_info['followers'] != 0:
 							potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user_info['followers'], 'numTweets': user_info['numTweets'], 'avgLikes': user_info['avgLikes'], 'avgRetweets': user_info['avgRetweets']}
+					
 						count += 1
 
 			self.update_cassandra(potential_influencers)
