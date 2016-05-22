@@ -210,7 +210,7 @@ def applyFilters():
 	for name in filtered_influencers:
 		links.append('https://twitter.com/' + name)
 
-	left_btn_view = ""
+	left_btn_view = "disabled"
 	right_btn_view = ""
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
@@ -262,6 +262,7 @@ def oauth_authorized(response):
 	# For web apps, we need to re-build the auth handler...
 	auth = twitter_auth.UserAuth(access_token, access_token_secret)
 
+	global query
 	query = session.get('query')
 	if query is None:
 		return redirect(url_for('index'))
@@ -273,15 +274,23 @@ def oauth_authorized(response):
 	potential_influencers = influencers['first_pull']
 	leftover_influencers = influencers['leftovers']
 
+	# store variables for pagination
 	global origData
-	origData = potential_influencers
+	origData.append(potential_influencers)
+
+	global leftoverData
+	leftoverData = leftover_influencers
+
+	global pmax
+	num_results = len(potential_influencers) + len(leftover_influencers)
+	pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
 
 	links = []
 	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
 
 	# disable buttons appropriately
-	left_btn_view = ""
+	left_btn_view = "disabled"
 	right_btn_view = ""
 	if len(leftover_influencers) == 0:
 		left_btn_view = "disabled"
@@ -300,7 +309,7 @@ def contact():
 	data = {}
 	return render_template('contact.html', data=data)
 
-# TODO: integrate paginate
+
 @app.route('/follow', methods=['POST'])
 def follow():
 	twitter_token = session.get('twitter_token')
@@ -311,7 +320,7 @@ def follow():
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 		interaction = twitter_interact.Interact(query, auth)
 		interaction.follow_user(user_to_follow)
-	potential_influencers = origData
+	potential_influencers = origData[currPage]
 
 	links = []
 	for name in potential_influencers:
@@ -320,6 +329,10 @@ def follow():
 	# disable buttons appropriately
 	left_btn_view = ""
 	right_btn_view = ""
+	if currPage == 0:
+		left_btn_view = "disabled"
+	if currPage == pmax:
+		right_btn_view = "disabled"
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
