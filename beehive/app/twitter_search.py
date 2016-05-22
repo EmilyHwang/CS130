@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from cass_orm import Cassandra
 from user_rank import UserRank
 from collections import OrderedDict
-import MySQLdb
+from mysql_orm import MySQL
 
 #from collections import Counter, OrderedDict
 from cassandra.cluster import Cluster
@@ -35,14 +35,7 @@ class Search:
 		self.api = auth.create_api()
 
 		# Connect to MySQLdb
-		self.db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-				 user="",         # your username
-				 passwd="",  # your password
-				 db="beehive")        # name of the data base
-
-		# you must create a Cursor object. It will let
-		#  you execute all the queries you need
-		self.cur = self.db.cursor(MySQLdb.cursors.DictCursor)
+		self.mysql = MySQL('beehive')
 
 		# Connect to Cassandra
 		self.cass = Cassandra('beehive')
@@ -84,7 +77,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
 		logfile.info("========= Query User Timeline ===========")
-		logfile.info("-- Looking at user %s's timeline ..." % user )
+		logfile.info("Looking at user %s's timeline ..." % user )
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
 
 		last_status = None
@@ -208,7 +201,7 @@ class Search:
 			user_update_queue = {}
 			for user in users:
 				# If we already spend time searching for 10 users, we don't want to do it anymore
-				if user.followers == 0 and count == 10:
+				if user.followers == 0 and count >= 10:
 					# Iterate the rest of the un-updated one and return
 					user_update_queue[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated}
 
@@ -227,8 +220,9 @@ class Search:
 						logfile.info("User %s doesn't have information :( Search API" % user.username)
 >>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 						user_info = self.query_user_timeline(user.username)
-						if user_info is not None:
+						if user_info['followers'] != 0:
 							potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user_info['followers'], 'numTweets': user_info['numTweets'], 'avgLikes': user_info['avgLikes'], 'avgRetweets': user_info['avgRetweets']}
+					
 						count += 1
 
 			self.update_cassandra(potential_influencers)
@@ -247,11 +241,10 @@ class Search:
 		# if hashtags exists in table, use datatabse, otherwise search twitter
 
 		potential_influencers = {}
+	
+		data = self.mysql.findHashtag(query)
 
-		self.cur.execute("SELECT * FROM Hashtags WHERE hashtag=%s", (query,))
-		data = self.cur.fetchone()
-
-		if data is None: # hashtag doesn't exist, search twitter
+		if not data: # hashtag doesn't exist, search twitter
 			logfile.info("Hashtag not found. Searching twitter")
 
 			# This is a list of all users appeared form searching the hashtag
@@ -259,12 +252,9 @@ class Search:
 			users = init_results[0]
 
 			potential_influencers = self.search_users_detail(users)
-			try:
-				logfile.info("Update Hashtag table")
-				self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
-				self.db.commit()
-			except:
-				self.db.rollback()
+
+			# Update MySQL Hashtag table
+			self.mysql.newHashtag(query)
 
 			return potential_influencers
 
@@ -282,13 +272,9 @@ class Search:
 				users = self.get_users_and_hashtags()
 				potential_influencers = self.search_users_detail(users)
 
-				try:
-					logfile.info("Update Hashtag table")
-					self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
-					self.db.commit()
-				except:
-					self.db.rollback()
-
+				# Update hashtag table
+				self.mysql.updateHashtag(query)
+					
 				return potential_influencers
 
 			# If the hashtags exists and it's updated
@@ -300,12 +286,8 @@ class Search:
 				if users is not None:
 					potential_influencers = self.search_users_detail(users)
 
-					try:
-						logfile.info("Update Hashtag table")
-						self.cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
-						self.db.commit()
-					except:
-						self.db.rollback()
+					# Update hashtag table
+					self.mysql.updateHashtag(query)
 
 					return potential_influencers
 
@@ -323,4 +305,3 @@ class Search:
 					logfile.error("mysql and cassandra databases out of sync. Search user detail?") 
 					logconsole.error("mysql and cassandra databases out of sync. Search user detail?") 
 					return {}
->>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
