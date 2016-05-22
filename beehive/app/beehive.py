@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
+import math
 import rand_influencers
 import pdb
 import categories
@@ -38,8 +39,13 @@ twitter_oauth = oauth.remote_app('twitter',
 def get_twitter_token(token=None):
 	return session.get('twitter_token')
 
-origData = {}
+origData = []
 query = ''
+leftoverData = {}
+currPage = 0
+pmax = 0
+RESULTS_PER_PAGE = 10
+search = None
 
 
 @app.route('/')
@@ -73,29 +79,115 @@ def search():
 		access_token = twitter_token[0]
 		access_token_secret = twitter_token[1]
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
-		
+
 		global query
+		global search
 		query = request.form['user-input']
 		search = twitter_search.Search(query, auth)
+		print search
 
 		# Get a list of users back
-		potential_influencers = search.search_users()
+		influencers = search.search_users()
+		potential_influencers = influencers['first_pull']
+		leftover_influencers = influencers['leftover']
 
+		# store variables for pagination
 		global origData
-		origData = potential_influencers['first_10']
+		origData.append(potential_influencers)
+
+		global leftoverData
+		leftoverData = leftover_influencers
+
+		global pmax
+		num_results = len(potential_influencers) + len(leftover_influencers)
+		pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
 
 		links = []
-		for name in potential_influencers['first_10']:
+		for name in potential_influencers:
 			links.append('https://twitter.com/' + name)
 
-		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
+		# disable buttons appropriately
+		left_btn_view = "disabled"
+		right_btn_view = ""
+		if len(leftover_influencers) == 0:
+			left_btn_view = "disabled"
+			right_btn_view = "disabled"
+
+		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 	else:
 		return redirect('/search-page')
+
+# only paginate if not all results available upon query
+@app.route('/search/results', methods=['POST'])
+def paginate():
+	request_page = request.form['page']
+	print request_page
+	print pmax
+	global currPage
+	global origData
+
+	if request_page == "previous":
+		if currPage != 0:
+			currPage = currPage - 1
+			potential_influencers = origData[currPage]
+
+			links = []
+			for name in potential_influencers:
+				links.append('https://twitter.com/' + name)
+
+			# disable buttons appropriately
+			left_btn_view = ""
+			right_btn_view = ""
+			if currPage == 0:
+				left_btn_view = "disabled"
+
+			return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
+	if request_page == "next":
+		if currPage != pmax:
+			currPage = currPage + 1
+
+			# disable buttons appropriately
+			left_btn_view = ""
+			right_btn_view = ""
+			if currPage == pmax:
+				right_btn_view = "disabled"
+
+			# check if results already cached before querying
+			if currPage < len(origData) :
+				potential_influencers = origData[currPage]
+
+				links = []
+				for name in potential_influencers:
+					links.append('https://twitter.com/' + name)
+
+				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
+			# results not cached, go ahead and query
+			else:
+				global leftoverData
+				influencers = search.search_users_detail(leftoverData)
+				potential_influencers = influencers['first_pull']
+				leftover_influencers = influencers['leftover']
+
+				origData.append(potential_influencers)
+				leftoverData = leftover_influencers
+
+				links = []
+				for name in potential_influencers:
+					links.append('https://twitter.com/' + name)
+
+				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
+
+
+	# TODO
+	# redirect to 404
+	return redirect('/index')
 
 @app.route('/search-page')
 def search_page():
 	return render_template('search_page.html')
 
+
+#TODO: fix filtering w/ pagination
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
 	print request.form
@@ -109,7 +201,10 @@ def applyFilters():
 	for name in filtered_influencers:
 		links.append('https://twitter.com/' + name)
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers)
+	left_btn_view = ""
+	right_btn_view = ""
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
 
 @app.route('/influencers/<path:category>', methods=['GET'])
@@ -165,16 +260,25 @@ def oauth_authorized(response):
 	search = twitter_search.Search(query, auth)
 
 	# Get a list of users back
-	potential_influencers = search.search_users()
+	influencers = search.search_users()
+	potential_influencers = influencers['first_pull']
+	leftover_influencers = influencers['leftovers']
 
 	global origData
-	origData = potential_influencers['first_10']
+	origData = potential_influencers
 
 	links = []
-	for name in potential_influencers['first_10']:
+	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers['first_10'])
+	# disable buttons appropriately
+	left_btn_view = ""
+	right_btn_view = ""
+	if len(leftover_influencers) == 0:
+		left_btn_view = "disabled"
+		right_btn_view = "disabled"
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
 @app.route('/about')
 def about():
@@ -187,6 +291,7 @@ def contact():
 	data = {}
 	return render_template('contact.html', data=data)
 
+# TODO: integrate paginate
 @app.route('/follow', methods=['POST'])
 def follow():
 	twitter_token = session.get('twitter_token')
@@ -202,7 +307,12 @@ def follow():
 	links = []
 	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers)
+
+	# disable buttons appropriately
+	left_btn_view = ""
+	right_btn_view = ""
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
 
 if __name__ == '__main__':
