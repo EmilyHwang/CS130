@@ -15,19 +15,15 @@ import MySQLdb
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
 
+#logging
+import logging
+
 MAX_TWEETS = 100
 MAX_USER_TIMELINE_TWEETS = 200
 MIN_NUM_OF_FOLLOWERS = 100
 
-# access_token = os.environ['ACCESS_TOKEN']
-# access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
-# consumer_key = os.environ['CONSUMER_KEY']
-# consumer_secret = os.environ['CONSUMER_SECRET']
-
-# auth = OAuthHandler(consumer_key, consumer_secret)
-# auth.set_access_token(access_token, access_token_secret)
-# api = API(auth, wait_on_rate_limit=True)
-
+logfile = logging.getLogger('file')
+logconsole = logging.getLogger('console')
 
 class Search:
 	def __init__(self, query, auth, max_tweets=MAX_TWEETS, max_user_timeline_tweets=MAX_USER_TIMELINE_TWEETS):
@@ -52,6 +48,7 @@ class Search:
 		self.cass = Cassandra('beehive')
 
 	def get_users_and_hashtags(self):
+		logfile.info("========== Get User And Hashtag ===========")
 		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
 
 		query_results = []
@@ -78,10 +75,6 @@ class Search:
 
 				hashtag_list = tweet.entities['hashtags']
 				hashtags.extend([hashtag['text'] for hashtag in hashtag_list])
-
-		print "Get_Users_And_Hashtags ============ "
-		print "Total Number of users: %d" % len(users)
-
 		return [users, set(mentioned_users), hashtags]
 
 	# -----------------------------------------------------------------------
@@ -90,6 +83,8 @@ class Search:
 	# returns: json
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
+		logfile.info("========= Query User Timeline ===========")
+		logfile.info("-- Looking at user %s's timeline ..." % user )
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
 
 		last_status = None
@@ -112,11 +107,17 @@ class Search:
 			statuses_count = last_status.user.statuses_count
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
+<<<<<<< HEAD
 
 			return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
+=======
+			
+		return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 
 
 	def update_cassandra(self, potential_influencers):
+		logfile.info("========= Updating Cassandra ===========")
 		query = self.hashtag
 
 		for user in potential_influencers:
@@ -128,14 +129,12 @@ class Search:
 
 			cassUsers = self.cass.get_user(user)
 			if not cassUsers:
-				#print "Inserting user: %s" % (user_info['fullname'])
 				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
 
 				self.cass.new_hashtag(query, user, user_info['fullname'], user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0)
 				potential_influencers[user]['userRank'] = rank
 
 			else: # user already associated with another hashtag. need to update time appeared
-				print "User %s exits, update time"
 				cassUsers = self.cass.get_most_recent_user(user)
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
@@ -160,6 +159,7 @@ class Search:
 	# 	10 users information; it will return all results in 'first_pull' if data if all info is already in cassandra db
 	# -----------------------------------------------------------------------
 	def search_users_detail(self, users):
+		logfile.info("========= SEARCH USERS DETAIL ===========")
 		count = 0
 		potential_influencers = {}
 
@@ -167,11 +167,18 @@ class Search:
 		# 	return {'first_pull': {}, 'leftover': {}}
 
 		if type(users) is dict:
+<<<<<<< HEAD
 			print "This is a fresh set of results, need to query Twitter API"
 			# this is a result from get_users_and_hashtags
 			leftover = users.copy()
 			for user in users:
 				print "Looking at user %s's timeline ..." % user
+=======
+			logfile.info("This is a fresh set of results, need to query Twitter API")
+			# this is a result from get_users_and_hashtags 
+			leftover = users.copy()
+			for user in users:
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 				user_info = self.query_user_timeline(user)
 				if user_info is not None:
 					all_info = users[user].copy()
@@ -181,24 +188,27 @@ class Search:
 
 				count += 1
 				if count == 10:
-					print "Finish looking up 10 users, time to return!"
 					self.update_cassandra(potential_influencers)
+<<<<<<< HEAD
 					print "======================================="
 					print leftover
 					return {'first_pull': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': leftover}
 
 			print "All users found!"
+=======
+					return {'first_10': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': leftover}
+
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 			self.update_cassandra(potential_influencers)
 			return {'first_pull': OrderedDict(sorted(potential_influencers.items(), key=lambda x: x[1]['userRank'], reverse=True)), 'leftover': {}}
 
 		else:
 			# This is a Cassandra Object
-			print "These data are from Cassandra dataset/"
+			logfile.info("These data are from Cassandra dataset")
 			user_update_queue = {}
 			for user in users:
 				# If we already spend time searching for 10 users, we don't want to do it anymore
 				if user.followers == 0 and count == 10:
-					print "Finish looking up 10 users, time to return!"
 					# Iterate the rest of the un-updated one and return
 					user_update_queue[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated}
 
@@ -206,12 +216,16 @@ class Search:
 				else:
 					# Check whether it needs to use Twitter API or not
 					if user.followers != 0:
-						print "User %s has information in our database! No need to API" % user.username
+						logfile.info("User %s has information in our database! No need to API" % user.username)
 						potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets}
 					else:
 						# This object is a cassandra object but it's not updated
+<<<<<<< HEAD
 						print "User %s doesn't have information :( Search API" % user.username
 						print "Looking at user %s's timeline ..." % user.username
+=======
+						logfile.info("User %s doesn't have information :( Search API" % user.username)
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 						user_info = self.query_user_timeline(user.username)
 						if user_info is not None:
 							potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user_info['followers'], 'numTweets': user_info['numTweets'], 'avgLikes': user_info['avgLikes'], 'avgRetweets': user_info['avgRetweets']}
@@ -229,6 +243,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def search_users(self):
 		query = self.hashtag
+		logfile.info("======= Search Users for hashtag #%s =======" % query)
 		# if hashtags exists in table, use datatabse, otherwise search twitter
 
 		potential_influencers = {}
@@ -237,7 +252,7 @@ class Search:
 		data = self.cur.fetchone()
 
 		if data is None: # hashtag doesn't exist, search twitter
-			print "Hashtag not found. Searching twitter"
+			logfile.info("Hashtag not found. Searching twitter")
 
 			# This is a list of all users appeared form searching the hashtag
 			init_results = self.get_users_and_hashtags()
@@ -245,6 +260,7 @@ class Search:
 
 			potential_influencers = self.search_users_detail(users)
 			try:
+				logfile.info("Update Hashtag table")
 				self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
 				self.db.commit()
 			except:
@@ -256,12 +272,18 @@ class Search:
 			#check timestamp
 
 			# older than one day, search twitter, and return the first 10 {potential_users, exist=false}
+<<<<<<< HEAD
 			if data['lastUpdated'] < datetime.now()-timedelta(days=1):
 				print "Hashtag too old. Searching twitter"
+=======
+			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	
+				logfile.info("Hashtag too old. Searching twitter")
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
 				users = self.get_users_and_hashtags()
 				potential_influencers = self.search_users_detail(users)
 
 				try:
+					logfile.info("Update Hashtag table")
 					self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, query))
 					self.db.commit()
 				except:
@@ -272,15 +294,14 @@ class Search:
 			# If the hashtags exists and it's updated
 			else:
 				# go to cassandra
-				print "Retrieving data from Cassandra"
+				logfile.info("Retrieving data from Cassandra")
 				users = self.cass.get_hashtag(query)
 
 				if users is not None:
 					potential_influencers = self.search_users_detail(users)
 
-					#update timesearched
-					print "timesSearched: " + str(data['timeSearched'])
 					try:
+						logfile.info("Update Hashtag table")
 						self.cur.execute("""UPDATE Hashtags SET timeSearched=%s WHERE hashtag=%s""", (data['timeSearched']+1, query))
 						self.db.commit()
 					except:
@@ -289,6 +310,7 @@ class Search:
 					return potential_influencers
 
 				else:
+<<<<<<< HEAD
 					print "mysql and cassandra databases out of sync. Search user detail?"
 					return {}
 
@@ -297,3 +319,8 @@ class Search:
 # if __name__ == "__main__":
     # s = Interact("ucla2016")
     # s.follow_user('UCLAHonors')
+=======
+					logfile.error("mysql and cassandra databases out of sync. Search user detail?") 
+					logconsole.error("mysql and cassandra databases out of sync. Search user detail?") 
+					return {}
+>>>>>>> 1f184fb19401f37be3d9f7f55dc55119376f41ec
