@@ -26,8 +26,13 @@ class MySQL(object):
 			self.db.rollback()
 
 	def findHashtag(self, hashtag):
-		self.cur.execute("""SELECT hashtag FROM Hashtags WHERE hashtag=%s;""", (hashtag,))
-		if self.cur.fetchone() is None:
-			return False
-		else:
-			return True
+		self.cur.execute("""SELECT * FROM Hashtags WHERE hashtag=%s;""", (hashtag,))
+		return self.cur.fetchone()
+
+	def newHashtag(self, hashtag):
+		try:
+			logfile.info("Update Hashtag table")
+			self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+			self.db.commit()
+		except:
+			self.db.rollback()
