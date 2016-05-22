@@ -152,3 +152,8 @@ class Cassandra(object):
 		query1 = self.session.prepare("""DELETE FROM users WHERE username = ? and lastupdated = ?;""")
 			
 		self.session.execute(query1, [username, timestamp])
+
+	def delete_user_without_time(self, username):
+		query1 = self.session.prepare("""DELETE FROM users WHERE username = ?""")
+			
+		self.session.execute(query1, [username])		

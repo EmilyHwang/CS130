@@ -24,3 +24,15 @@ class MySQL(object):
 			self.db.commit()
 		except:
 			self.db.rollback()
+
+	def findHashtag(self, hashtag):
+		self.cur.execute("""SELECT * FROM Hashtags WHERE hashtag=%s;""", (hashtag,))
+		return self.cur.fetchone()
+
+	def newHashtag(self, hashtag):
+		try:
+			logfile.info("Update Hashtag table")
+			self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+			self.db.commit()
+		except:
+			self.db.rollback()
