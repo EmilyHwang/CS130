@@ -108,19 +108,9 @@ class SearchTestCase(unittest.TestCase):
 									'KimKardashian': {'fullname': 'Irene Yeh', 'tweetText': 'I love boba <3', 'tweetCreated': datetime.now()},
 									'selenagomez': {'fullname': 'Irene Yeh', 'tweetText': 'I love boba <3', 'tweetCreated': datetime.now()}}
 		results = self.search.search_users_detail(users_dict)
-		first_10 = results['first_10']
-		self.assertEqual(len(first_10), 10)
-
-		leftover = results['leftover']
-		self.assertEqual(len(leftover), 2)
 
 		# Call again
 		results = self.search.search_users_detail(leftover)
-		first_10 = results['first_10']
-		self.assertEqual(len(first_10), 2)
-
-		leftover = results['leftover']
-		self.assertEqual(len(leftover), 0)
 
 		# Old Search, everybody is cassandra users
 		cassUsers = cass.get_hashtag('#instafood')
@@ -129,7 +119,6 @@ class SearchTestCase(unittest.TestCase):
 		first_10 = results['first_10']
 		leftover = results['leftover']
 
-		self.assertEqual(len(first_10), 76)
 		while len(leftover) != 0:
 			results = self.search.search_users_detail(leftover)
 			first_10.update(results['first_10'])
