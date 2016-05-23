@@ -116,11 +116,11 @@ def search():
 			links.append('https://twitter.com/' + name)
 
 		# disable buttons appropriately
-		left_btn_view = "disabled"
+		left_btn_view = "disabled='disabled'"
 		right_btn_view = ""
 		if len(leftover_influencers) == 0:
-			left_btn_view = "disabled"
-			right_btn_view = "disabled"
+			left_btn_view = "disabled='disabled'"
+			right_btn_view = "disabled='disabled'"
 
 		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 	else:
@@ -148,7 +148,7 @@ def paginate():
 			left_btn_view = ""
 			right_btn_view = ""
 			if currPage == 0:
-				left_btn_view = "disabled"
+				left_btn_view = "disabled='disabled'"
 
 			return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 	if request_page == "next":
@@ -159,7 +159,7 @@ def paginate():
 			left_btn_view = ""
 			right_btn_view = ""
 			if currPage == pmax:
-				right_btn_view = "disabled"
+				right_btn_view = "disabled='disabled'"
 
 			# check if results already cached before querying
 			if currPage < len(origData) :
@@ -210,7 +210,7 @@ def applyFilters():
 	for name in filtered_influencers:
 		links.append('https://twitter.com/' + name)
 
-	left_btn_view = "disabled"
+	left_btn_view = "disabled='disabled'"
 	right_btn_view = ""
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
@@ -290,11 +290,11 @@ def oauth_authorized(response):
 		links.append('https://twitter.com/' + name)
 
 	# disable buttons appropriately
-	left_btn_view = "disabled"
+	left_btn_view = "disabled='disabled'"
 	right_btn_view = ""
 	if len(leftover_influencers) == 0:
-		left_btn_view = "disabled"
-		right_btn_view = "disabled"
+		left_btn_view = "disabled='disabled'"
+		right_btn_view = "disabled='disabled'"
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
@@ -330,9 +330,9 @@ def follow():
 	left_btn_view = ""
 	right_btn_view = ""
 	if currPage == 0:
-		left_btn_view = "disabled"
+		left_btn_view = "disabled='disabled'"
 	if currPage == pmax:
-		right_btn_view = "disabled"
+		right_btn_view = "disabled='disabled'"
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
 
