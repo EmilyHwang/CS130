@@ -122,7 +122,7 @@ class SearchTestCase(unittest.TestCase):
 		leftover = results['leftover']
 		self.assertEqual(len(leftover), 0)
 
-		# Old Search, everybody is cassandra users
+		Old Search, everybody is cassandra users
 		cassUsers = cass.get_hashtag('#instafood')
 
 		results = self.search.search_users_detail(cassUsers)
