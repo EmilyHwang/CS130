@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
-import rand_influencers
+import twitter.rand_influencers
 import pdb
-import categories
-import filter_influencers
-import twitter_search
-import twitter_auth
-import twitter_interact
+import twitter.categories
+import twitter.filter_influencers
+import twitter.twitter_search
+import twitter.twitter_auth
+import twitter.twitter_interact
 
 # Logging
 import logging, logging.config, yaml
