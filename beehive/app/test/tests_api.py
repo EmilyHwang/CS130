@@ -112,7 +112,7 @@ class SearchTestCase(unittest.TestCase):
 		# Call again
 		results = self.search.search_users_detail(leftover)
 
-		# Old Search, everybody is cassandra users
+		Old Search, everybody is cassandra users
 		cassUsers = cass.get_hashtag('#instafood')
 
 		results = self.search.search_users_detail(cassUsers)

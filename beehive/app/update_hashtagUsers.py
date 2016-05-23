@@ -5,10 +5,10 @@
 #########################################################
 
 import os, sys, MySQLdb, datetime, time
-from cass_orm import Cassandra
-from mysql_orm import MySQL
-from twitter_search import Search
-from twitter_auth import AppAuth
+from twitter.orm.cass_orm import Cassandra
+from twitter.orm.mysql_orm import MySQL
+from twitter.twitter_search import Search
+from twitter.twitter_auth import AppAuth
 
 class HashtagUsers:
 	def __init__(self, auth):

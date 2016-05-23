@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from tweepy import *
-from cass_orm import Cassandra
+from orm.cass_orm import Cassandra
 import logging
 
 logfile = logging.getLogger('file')

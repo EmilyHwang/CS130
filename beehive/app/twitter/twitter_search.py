@@ -6,10 +6,11 @@ import sys
 import time
 import os
 from datetime import datetime, timedelta
-from cass_orm import Cassandra
 from user_rank import UserRank
 from collections import OrderedDict
-from mysql_orm import MySQL
+
+from orm.cass_orm import Cassandra
+from orm.mysql_orm import MySQL
 
 #from collections import Counter, OrderedDict
 from cassandra.cluster import Cluster
@@ -40,6 +41,11 @@ class Search:
 		# Connect to Cassandra
 		self.cass = Cassandra('beehive') 
 	
+	# -----------------------------------------------------------------------
+	# Get Users and Hashtags
+	# Input: None
+	# Output: [{username: {fullname: , tweetText:, tweetCreated}}, set(mentioned_users), mentioned_hashtags]
+	# -----------------------------------------------------------------------
 	def get_users_and_hashtags(self):
 		logfile.info("========== Get User And Hashtag ===========")
 		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
@@ -73,7 +79,8 @@ class Search:
 	# -----------------------------------------------------------------------
 	# searches user timeline, retrieves 200 tweets each time, API max = 3200, current max set to 1000
 	# parameters: user as screen_nam
-	# returns: json
+	# returns: if there's status: {'fullname': last_status.user.name, 'followers': [int], 'numTweets': [int], 'avgLikes': [float], 'avgRetweets': [float]}
+	#					 else {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
 		logfile.info("========= Query User Timeline ===========")
@@ -211,8 +218,7 @@ class Search:
 	# -----------------------------------------------------------------------
 	def search_users(self):
 		query = self.hashtag
-		logfile.info("======= Search Users for hashtag #%s =======" % query)
-		# if hashtags exists in table, use datatabse, otherwise search twitter
+		logfile.info("======= Search Users for hashtag %s =======" % query)
 		
 		potential_influencers = {}
 	
