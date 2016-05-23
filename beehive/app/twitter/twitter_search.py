@@ -6,10 +6,11 @@ import sys
 import time
 import os
 from datetime import datetime, timedelta
-from cass_orm import Cassandra
 from user_rank import UserRank
 from collections import OrderedDict
-from mysql_orm import MySQL
+
+from orm.cass_orm import Cassandra
+from orm.mysql_orm import MySQL
 
 #from collections import Counter, OrderedDict
 from cassandra.cluster import Cluster
