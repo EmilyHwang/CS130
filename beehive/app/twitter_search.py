@@ -234,7 +234,6 @@ class Search:
 
 		else :
 			#check timestamp
-			print "hashtag exist"
 			# older than one day, search twitter, and return the first 10 {potential_users, exist=false}
 			if data['lastUpdated'] < datetime.now()-timedelta(days=1):
 				logfile.info("Hashtag too old. Searching twitter")
