@@ -153,7 +153,7 @@ class Search:
 
 		# if len(users) == 0:
 		# 	return {'first_10': {}, 'leftover': {}}
-		
+
 		if type(users) is dict:
 			logfile.info("This is a fresh set of results, need to query Twitter API")
 			# this is a result from get_users_and_hashtags 
@@ -234,11 +234,12 @@ class Search:
 
 		else :
 			#check timestamp
-
+			print "hashtag exist"
 			# older than one day, search twitter, and return the first 10 {potential_users, exist=false}
-			if data['lastUpdated'] < datetime.now()-timedelta(days=1):	
+			if data['lastUpdated'] < datetime.now()-timedelta(days=1):
 				logfile.info("Hashtag too old. Searching twitter")
-				users = self.get_users_and_hashtags()
+				init_results = self.get_users_and_hashtags()
+				users = init_results[0]
 				potential_influencers = self.search_users_detail(users)
 
 				# Update hashtag table
