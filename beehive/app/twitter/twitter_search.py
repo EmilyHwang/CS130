@@ -248,7 +248,7 @@ class Search:
 				potential_influencers = self.search_users_detail(users)
 
 				# Update hashtag table
-				self.mysql.updateHashtag(query)
+				self.mysql.updateHashtag(query, data['timeSearched']+1)
 					
 				return potential_influencers
 
@@ -262,7 +262,7 @@ class Search:
 					potential_influencers = self.search_users_detail(users)
 
 					# Update hashtag table
-					self.mysql.updateHashtag(query)
+					self.mysql.updateHashtag(query, data['timeSearched']+1)
 
 					return potential_influencers
 
