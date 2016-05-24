@@ -4,8 +4,8 @@ from twitter_interact import Interact
 import twitter_auth
 import os
 from datetime import datetime
-from cass_orm import Cassandra
-from mysql_orm import MySQL
+from orm.cass_orm import Cassandra
+from orm.mysql_orm import MySQL
 from collections import OrderedDict
 
 access_token = os.environ['ACCESS_TOKEN']
@@ -108,11 +108,11 @@ class SearchTestCase(unittest.TestCase):
 									'KimKardashian': {'fullname': 'Irene Yeh', 'tweetText': 'I love boba <3', 'tweetCreated': datetime.now()},
 									'selenagomez': {'fullname': 'Irene Yeh', 'tweetText': 'I love boba <3', 'tweetCreated': datetime.now()}}
 		results = self.search.search_users_detail(users_dict)
-
+		leftover = results['leftover']
 		# Call again
 		results = self.search.search_users_detail(leftover)
 
-		Old Search, everybody is cassandra users
+		# Old Search, everybody is cassandra users
 		cassUsers = cass.get_hashtag('#instafood')
 
 		results = self.search.search_users_detail(cassUsers)
