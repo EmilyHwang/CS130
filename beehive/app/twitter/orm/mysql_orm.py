@@ -1,4 +1,11 @@
 import MySQLdb
+from datetime import datetime
+
+#logging
+import logging
+
+logfile = logging.getLogger('file')
+logconsole = logging.getLogger('console')
 
 class MySQL(object):
 	def __init__(self, database):
@@ -18,11 +25,13 @@ class MySQL(object):
 			arr.add(i["hashtag"])
 		return arr
 
-	def updateHashtag(self, hashtag):
+	def updateHashtag(self, hashtag, timeSearched):
+		logfile.info("Updateing Hashtag table")
 		try:
-			self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data['timeSearched']+1, hashtag))
+			self.cur.execute("""UPDATE Hashtags SET lastUpdated=%s, timeSearched=%s WHERE hashtag=%s""", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), timeSearched, hashtag))
 			self.db.commit()
 		except:
+			logfile.info("Something wrong with the update!!")
 			self.db.rollback()
 
 	def findHashtag(self, hashtag):
@@ -31,8 +40,9 @@ class MySQL(object):
 
 	def newHashtag(self, hashtag):
 		try:
-			logfile.info("Update Hashtag table")
-			self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (query, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+			logfile.info("Inserting a new hashtag")
+			self.cur.execute("""INSERT INTO Hashtags VALUES (%s, %s, %s)""", (hashtag, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
 			self.db.commit()
 		except:
+			logfile.info("Fail to insert a new hashtag!")
 			self.db.rollback()

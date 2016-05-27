@@ -1,4 +1,4 @@
-from cass_orm import Cassandra
+from orm.cass_orm import Cassandra
 from datetime import datetime, timedelta, date
 import logging
 

@@ -6,10 +6,11 @@ import sys
 import time
 import os
 from datetime import datetime, timedelta
-from cass_orm import Cassandra
 from user_rank import UserRank
 from collections import OrderedDict
-from mysql_orm import MySQL
+
+from orm.cass_orm import Cassandra
+from orm.mysql_orm import MySQL
 
 #from collections import Counter, OrderedDict
 from cassandra.cluster import Cluster
@@ -40,6 +41,12 @@ class Search:
 		# Connect to Cassandra
 		self.cass = Cassandra('beehive')
 
+
+	# -----------------------------------------------------------------------
+	# Get Users and Hashtags
+	# Input: None
+	# Output: [{username: {fullname: , tweetText:, tweetCreated}}, set(mentioned_users), mentioned_hashtags]
+	# -----------------------------------------------------------------------
 	def get_users_and_hashtags(self):
 		logfile.info("========== Get User And Hashtag ===========")
 		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
@@ -73,26 +80,27 @@ class Search:
 	# -----------------------------------------------------------------------
 	# searches user timeline, retrieves 200 tweets each time, API max = 3200, current max set to 1000
 	# parameters: user as screen_nam
-	# returns: json
+	# returns: if there's status: {'fullname': status.user.name, 'followers': [int], 'numTweets': [int], 'avgLikes': [float], 'avgRetweets': [float]}
+	#					 else {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 	# -----------------------------------------------------------------------
 	def query_user_timeline(self, user):
 		logfile.info("========= Query User Timeline ===========")
 		logfile.info("Looking at user %s's timeline ..." % user )
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
 
-		last_status = None
-
 		favorite_count_sum = 0
 		retweet_count_sum = 0
 		total_num_tweets = 0
 
+		status = None
+		logfile.info("Calculating ...")
 		for status in data:
-			last_status = status
-			total_num_tweets += 1
-			favorite_count_sum += status.favorite_count
-			retweet_count_sum += status.retweet_count
+			logfile.info("calculating status id %s" % status.id)
+			total_num_tweets = total_num_tweets + 1
+			favorite_count_sum = status.favorite_count + favorite_count_sum
+			retweet_count_sum = status.retweet_count + retweet_count_sum
 
-		if last_status is None:
+		if status is None:
 			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 
 		else:
@@ -101,7 +109,7 @@ class Search:
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
 
-		return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
+			return {'fullname': status.user.name, 'followers': status.user.followers_count, 'numTweets': status.user.statuses_count, 'avgLikes': favorite_count_sum/total_num_tweets, 'avgRetweets': retweet_count_sum/total_num_tweets}
 
 
 	def update_cassandra(self, potential_influencers):
@@ -242,7 +250,7 @@ class Search:
 				potential_influencers = self.search_users_detail(users)
 
 				# Update hashtag table
-				self.mysql.updateHashtag(query)
+				self.mysql.updateHashtag(query, data['timeSearched']+1)
 
 				return potential_influencers
 
@@ -256,7 +264,7 @@ class Search:
 					potential_influencers = self.search_users_detail(users)
 
 					# Update hashtag table
-					self.mysql.updateHashtag(query)
+					self.mysql.updateHashtag(query, data['timeSearched']+1)
 
 					return potential_influencers
 

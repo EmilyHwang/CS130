@@ -18,7 +18,7 @@ class Cassandra(object):
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
 	def new_hashtag(self, hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
-		logfile.info("Inserting/Updateing to hashtagusers table: #%s" % hashtag)
+		logfile.info("Inserting/Updateing to hashtagusers table: %s" % hashtag)
 		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?,?);""")
 		self.session.execute(query,[hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
 

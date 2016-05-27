@@ -19,8 +19,25 @@
 
 #!/usr/bin/python
 import MySQLdb
-import twitter
+import json
 import string
+import twitter_auth
+
+# -----------------------------------------------------------------------
+# searches users - get most recent status
+# parameters: list of users as screen_names
+# returns: [full name, status]
+# -----------------------------------------------------------------------
+def get_users_info(usernames):
+	auth = twitter_auth.AppAuth()
+	api = auth.create_api()
+
+	users_results = api.lookup_users(screen_names=usernames)
+
+	users_data = []
+	for user in users_results:
+		users_data.append(json.loads(json.dumps(user._json)))
+	return users_data
 
 # pulls random users from database
 def find_users(number):
@@ -68,10 +85,10 @@ def find_users_by_category(number, category):
 # Main functions
 def get_users(number):
 	users = find_users(number)
-	users_info = twitter.get_users_info(users)
+	users_info = get_users_info(users)
 	return users_info
 
 def get_users_by_category(number, category):
 	users = find_users_by_category(number, category)
-	users_info = twitter.get_users_info(users)
+	users_info = get_users_info(users)
 	return users_info

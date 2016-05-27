@@ -2,13 +2,15 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
 import math
-import rand_influencers
+
 import pdb
-import categories
-import filter_influencers
-import twitter_search
-import twitter_auth
-import twitter_interact
+import twitter.rand_influencers as rand_influencers
+import twitter.categories as categories
+import twitter.filter_influencers as filter_influencers
+import twitter.twitter_auth as twitter_auth
+
+from twitter.twitter_search import Search
+from twitter.twitter_interact import Interact
 
 # Logging
 import logging, logging.config, yaml
@@ -94,7 +96,7 @@ def search():
 		query = request.form['user-input']
 		logfile.info("Search initiated for hashtag: #%s" % query)
 
-		search = twitter_search.Search(query, auth)
+		search = Search(query, auth)
 		print search
 
 		# Get a list of users back
@@ -277,7 +279,7 @@ def oauth_authorized(response):
 	if query is None:
 		return redirect(url_for('index'))
 
-	search = twitter_search.Search(query, auth)
+	search = Search(query, auth)
 
 	# Get a list of users back
 	influencers = search.search_users()
@@ -330,7 +332,7 @@ def follow():
 		access_token = twitter_token[0]
 		access_token_secret = twitter_token[1]
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
-		interaction = twitter_interact.Interact(query, auth)
+		interaction = Interact(query, auth)
 		interaction.follow_user(user_to_follow)
 	potential_influencers = origData[currPage]
 
