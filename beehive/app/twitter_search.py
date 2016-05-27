@@ -38,8 +38,8 @@ class Search:
 		self.mysql = MySQL('beehive')
 
 		# Connect to Cassandra
-		self.cass = Cassandra('beehive') 
-	
+		self.cass = Cassandra('beehive')
+
 	def get_users_and_hashtags(self):
 		logfile.info("========== Get User And Hashtag ===========")
 		data = Cursor(self.api.search, q=self.hashtag, result_type="recent", count=100).items(self.max_tweets)
@@ -57,12 +57,12 @@ class Search:
 				#if user already exists in dict, check if datetime is more recent
 				if tweet_user not in users or (tweet_user in users and users[tweet_user]['tweetCreated'] < tweet_datetime):
 					users[tweet_user] = {'fullname': tweet.user.name, 'tweetText': tweet.text, 'tweetCreated': tweet_datetime}
-				
+
 				# Store this information inside Cassandra HashtagUsers table even though there is no complete info
 				# Next time when query, there will be information about the user and this hashtag
 				# If this user is in the results of the query, query user timeline
 				self.cass.new_hashtag(self.hashtag, tweet_user, tweet.user.name, 0, 0, 0, 0, tweet_datetime, tweet.text, 0, 0)
-			
+
 				mentions = tweet.entities['user_mentions']
 				mentioned_users.extend([mention['screen_name'] for mention in mentions])
 
@@ -79,7 +79,7 @@ class Search:
 		logfile.info("========= Query User Timeline ===========")
 		logfile.info("Looking at user %s's timeline ..." % user )
 		data = Cursor(self.api.user_timeline, screen_name=user, include_rts=0, count=200).items(self.max_user_timeline_tweets)
-		
+
 		last_status = None
 
 		favorite_count_sum = 0
@@ -100,10 +100,10 @@ class Search:
 			statuses_count = last_status.user.statuses_count
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
-			
+
 		return {'fullname': last_status.user.name, 'followers': followers_count, 'numTweets': statuses_count, 'avgLikes': avg_favorite_count, 'avgRetweets': avg_retweet_count}
 
-	
+
 	def update_cassandra(self, potential_influencers):
 		logfile.info("========= Updating Cassandra ===========")
 		query = self.hashtag
@@ -111,27 +111,27 @@ class Search:
 		for user in potential_influencers:
 			# add to tables
 			user_info = potential_influencers[user]
-			
+
 			userrank = UserRank(self.cass)
 			rank = userrank.calculate_user_rank(user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], 0, 0)
-			
+
 			cassUsers = self.cass.get_user(user)
 			if not cassUsers:
 				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
-				
+
 				self.cass.new_hashtag(query, user, user_info['fullname'], user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0)
 				potential_influencers[user]['userRank'] = rank
-				
+
 			else: # user already associated with another hashtag. need to update time appeared
 				cassUsers = self.cass.get_most_recent_user(user)
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
 				updatedNumAppeared = cassUser.numappeared + 1
 				self.cass.new_user(user, cassUser.fullname, datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
-				
+
 				self.cass.new_hashtag(query, user, cassUser.fullname, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank, 0)
 				potential_influencers[user]['userRank'] = rank
-				
+
 		return potential_influencers
 
 	# ----------------------------------------------------------------------
@@ -156,7 +156,7 @@ class Search:
 
 		if type(users) is dict:
 			logfile.info("This is a fresh set of results, need to query Twitter API")
-			# this is a result from get_users_and_hashtags 
+			# this is a result from get_users_and_hashtags
 			leftover = users.copy()
 			for user in users:
 				user_info = self.query_user_timeline(user)
@@ -164,7 +164,7 @@ class Search:
 					all_info = users[user].copy()
 					all_info.update(user_info)
 					potential_influencers[user] = all_info
-				leftover.pop(user, None)	
+				leftover.pop(user, None)
 
 				count += 1
 				if count == 10:
@@ -261,6 +261,6 @@ class Search:
 					return potential_influencers
 
 				else:
-					logfile.error("mysql and cassandra databases out of sync. Search user detail?") 
-					logconsole.error("mysql and cassandra databases out of sync. Search user detail?") 
+					logfile.error("mysql and cassandra databases out of sync. Search user detail?")
+					logconsole.error("mysql and cassandra databases out of sync. Search user detail?")
 					return {}
