@@ -104,8 +104,8 @@ class Search:
 			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
 
 		else:
-			followers_count = last_status.user.followers_count
-			statuses_count = last_status.user.statuses_count
+			followers_count = status.user.followers_count
+			statuses_count = status.user.statuses_count
 			avg_favorite_count = favorite_count_sum/total_num_tweets
 			avg_retweet_count = retweet_count_sum/total_num_tweets
 
