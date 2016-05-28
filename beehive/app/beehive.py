@@ -287,7 +287,7 @@ def oauth_authorized(response):
 	# Get a list of users back
 	influencers = search.search_users()
 	potential_influencers = influencers['first_pull']
-	leftover_influencers = influencers['leftovers']
+	leftover_influencers = influencers['leftover']
 
 	# store variables for pagination
 	global origData
