@@ -143,6 +143,7 @@ def paginate():
 	global currPage
 	global origData
 
+	# prohibit filter options b/c not all results available
 	filters_view = "hidden"
 
 	if request_page == "previous":
@@ -172,6 +173,7 @@ def paginate():
 				right_btn_view = "disabled='disabled'"
 
 			# check if results already cached before querying
+			# this could be the case if user clicked next, previous, next
 			if currPage < len(origData) :
 				potential_influencers = origData[currPage]
 
@@ -187,6 +189,7 @@ def paginate():
 				potential_influencers = influencers['first_pull']
 				leftover_influencers = influencers['leftover']
 
+				# add new page of influencers to origData
 				origData.append(potential_influencers)
 				leftoverData = leftover_influencers
 
@@ -206,7 +209,7 @@ def search_page():
 	return render_template('search_page.html')
 
 
-#TODO: fix filtering w/ pagination
+# Note - this route should not be accessed if pagination is in effect
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
 	logfile.info("original data")
@@ -340,16 +343,18 @@ def follow():
 	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
 
-	#TODO, fix this
 	# disable buttons appropriately
 	left_btn_view = ""
 	right_btn_view = ""
+	filters_view = "hidden"
 	if currPage == 0:
 		left_btn_view = "disabled='disabled'"
 	if currPage == pmax:
 		right_btn_view = "disabled='disabled'"
+	if pmax == 0:
+		filters_view = ""
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view)
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
 
 if __name__ == '__main__':
