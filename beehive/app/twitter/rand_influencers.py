@@ -20,8 +20,11 @@
 #!/usr/bin/python
 import MySQLdb
 import json
-import string
 import twitter_auth
+
+from orm.mysql_orm import MySQL
+
+mysql = MySQL('beehive')
 
 # -----------------------------------------------------------------------
 # searches users - get most recent status
@@ -39,56 +42,13 @@ def get_users_info(usernames):
 		users_data.append(json.loads(json.dumps(user._json)))
 	return users_data
 
-# pulls random users from database
-def find_users(number):
-	db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-						 user="",             # your username
-						 passwd="",           # your password
-						 db="beehive")        # name of the data base
-
-	# you must create a Cursor object. It will let
-	# you execute all the queries you need
-	cur = db.cursor()
-
-	users = []
-	# Use all the SQL you like
-	cur.execute("SELECT subCategoryId FROM Categories ORDER BY RAND() LIMIT %s", (number,))
-	subCatIds = cur.fetchall()
-	for id in subCatIds:
-		cur2 = db.cursor()
-		cur2.execute("""SELECT username FROM SubCategoryPeople WHERE subCategoryId = %s""", id)
-		(username,) = cur2.fetchone()
-		users.append(username)
-	return users
-
-
-# pull random users from database with specified category
-def find_users_by_category(number, category):
-	db = MySQLdb.connect(host="localhost",    # your host, usually localhost
-						 user="",             # your username
-						 passwd="",           # your password
-						 db="beehive")        # name of the data base
-	cur_id = db.cursor()
-	users = []
-
-	# Use all the SQL you like
-	formatted_category = string.replace(category, '&', '&amp;')
-	cur_id.execute("SELECT subCategoryId FROM Categories WHERE subCategory = %s", (formatted_category,))
-	subCatId = cur_id.fetchone()
-	cur_users = db.cursor()
-	cur_users.execute("""SELECT username FROM SubCategoryPeople WHERE subCategoryId = %s ORDER BY RAND() LIMIT %s""", (subCatId, number))
-	usernames = cur_users.fetchall()
-	for (user,) in usernames:
-		users.append(user)
-	return users
-
 # Main functions
 def get_users(number):
-	users = find_users(number)
+	users = mysql.getRandomUsers(number, None)
 	users_info = get_users_info(users)
 	return users_info
 
 def get_users_by_category(number, category):
-	users = find_users_by_category(number, category)
+	users = mysql.getRandomUsers(number, category)
 	users_info = get_users_info(users)
 	return users_info

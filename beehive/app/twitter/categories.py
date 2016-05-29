@@ -15,7 +15,8 @@ def getAllCategories():
     # {'Nonprofits': ['Nonprofits &amp; Foundations', 'Humanitarian'], 'Music': [...]
     catSub_dict = {}
     for pair in categories:
-        catSub_dict.setdefault(pair['categoryName'], []).append(pair['subCategory'])
+        formatted_sub = string.replace(pair['subCategory'], '&amp;', '&')
+        catSub_dict.setdefault(pair['categoryName'], []).append(formatted_sub)
 
     results = []
 

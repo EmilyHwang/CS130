@@ -1,4 +1,5 @@
 import MySQLdb
+import string
 from datetime import datetime
 
 #logging
@@ -50,3 +51,21 @@ class MySQL(object):
 	def getCatAndSub(self):
 		self.cur.execute("SELECT categoryName, subCategory from Categories")
 		return self.cur.fetchall()
+
+	def getRandomUsers(self, number, category):
+		print "category %s", category
+		results = []
+
+		if category is None:
+			self.cur.execute("SELECT username FROM SubCategoryPeople ORDER BY RAND() LIMIT %s", (number,))
+			results = [user['username'] for user in self.cur.fetchall()]
+			return results
+		else:
+			formatted_category = string.replace(category, '&', '&amp;')
+			self.cur.execute("SELECT subCategoryId FROM Categories WHERE subCategory = %s LIMIT 1", (formatted_category,))
+			subCatId = self.cur.fetchone()
+			self.cur.execute("SELECT username FROM SubCategoryPeople WHERE subCategoryId = %s ORDER BY RAND() LIMIT %s", (subCatId['subCategoryId'], number))
+			results = [user['username'] for user in self.cur.fetchall()]
+
+		return results
+	
