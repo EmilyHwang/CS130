@@ -66,6 +66,7 @@ def index():
 	cats = categories.getAllCategories();
 
 	logfile.info('Get random influencers from subcategory')
+	# get 3 random users
 	users = rand_influencers.get_users(3)
 
 	links = []
@@ -218,6 +219,7 @@ def applyFilters():
 	minFollowers = request.form['minFollowers']
 	maxFollowers = request.form['maxFollowers']
 
+
 	filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
 
 	links = []
@@ -315,16 +317,11 @@ def oauth_authorized(response):
 
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
+
 @app.route('/about')
 def about():
 	data = {}
 	return render_template('about.html', data=data)
-
-
-@app.route('/contact')
-def contact():
-	data = {}
-	return render_template('contact.html', data=data)
 
 
 @app.route('/follow', methods=['POST'])
