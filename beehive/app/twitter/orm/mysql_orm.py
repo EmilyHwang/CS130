@@ -46,3 +46,7 @@ class MySQL(object):
 		except:
 			logfile.info("Fail to insert a new hashtag!")
 			self.db.rollback()
+
+	def getCatAndSub(self):
+		self.cur.execute("SELECT categoryName, subCategory from Categories")
+		return self.cur.fetchall()
