@@ -125,7 +125,7 @@ def search():
 
 		global leftoverData
 		leftoverData = leftover_influencers
-		logfile.info("Number of results left: %d" % leftoverData)
+		logfile.info("Number of results left: %d" % len(leftoverData))
 
 		global pmax
 		num_results = len(potential_influencers) + len(leftover_influencers)
