@@ -125,13 +125,11 @@ def search():
 
 		global leftoverData
 		leftoverData = leftover_influencers
-		print "length of leftoverData: "
-		print len(leftoverData)
+		logfile.info("Number of results left: %d" % leftoverData)
 
 		global pmax
 		num_results = len(potential_influencers) + len(leftover_influencers)
-		print num_results
-		print math.ceil(num_results/float(RESULTS_PER_PAGE))
+		logfile.info("Total number of results: %d" % num_results)
 		# cast to float to prevent rounding before ceil() is called
 		pmax = math.ceil(num_results/float(RESULTS_PER_PAGE)) - 1
 
@@ -157,8 +155,6 @@ def search():
 @app.route('/search/results', methods=['POST'])
 def paginate():
 	request_page = request.form['page']
-	print request_page
-	print pmax
 	global currPage
 	global origData
 	global leftoverData
@@ -207,15 +203,15 @@ def paginate():
 				# add new page of influencers to origData
 				origData.append(potential_influencers)
 				leftoverData = leftover_influencers
-				print len(leftoverData)
+				logfile.info("New number of results left: %d" % leftoverData)
 
 				links = getProfileLinks(potential_influencers)
 
 				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
-	# TODO
-	# redirect to error page
-	return redirect('/index')
+	# redirect to home and display error b/c we should never get here
+	error_msg = "WHOOPS! Well that wasn't supposed to happen. Please try again."
+	return redirect('/index', error_msg=error_msg)
 
 @app.route('/search-page')
 def search_page():
@@ -236,7 +232,6 @@ def applyFilters():
 	maxFollowers = request.form['maxFollowers']
 
 	# validate user input
-	# TODO: display an error message to user instead of routing to index
 	try:
 		minFollowers = int(minFollowers)
 		maxFollowers = int(maxFollowers)
@@ -246,7 +241,9 @@ def applyFilters():
 		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
 
 	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers:
-		return redirect('/index')
+		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+		links = getProfileLinks(origData[0])
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
 
 	all_results = origData[0]
 	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers)
