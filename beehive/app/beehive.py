@@ -380,6 +380,16 @@ def follow():
 	# return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
 
+# Error handling
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('500.html'), 500
+
+
 if __name__ == '__main__':
 	# set up logging to file
 	logging.config.dictConfig(yaml.load(open('logging.conf')))
