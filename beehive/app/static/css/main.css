@@ -66,6 +66,32 @@ html, body {
     font-weight:700;
 }
 
+.sidebar-btn, .sidebar:visited {
+    background-color: #32353e;
+    border: none;
+    color: grey;
+}
+
+.sidebar-btn:hover, .sidebar-btn:focus {
+    color: #ebd467;
+    background-color: #32353e;
+    border: none;
+}
+
+.open>.dropdown-toggle.btn-default,
+.open>.dropdown-toggle.btn-default:focus, .open>.dropdown-toggle.btn-default:hover {
+    color: #ebd467;
+    background-color: #32353e;
+    border: none;
+}
+
+.category-name {
+
+}
+
+.category-clickable {
+
+}
 
 .lead {
     font-weight: 700;
@@ -105,17 +131,6 @@ h1, h2 {
 .panel-body {
    display: flex;
    flex-grow: 1;
-}
-
-.category-name {
-    font-weight: 700;
-    font-size: larger;
-}
-
-.category-clickable {
-    font-weight: 700;
-    text-decoration: underline;
-    font-size: larger;
 }
 
 /* error message styles */
