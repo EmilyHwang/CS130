@@ -53,17 +53,19 @@
 
     <br>
     <!-- (1) Display Filtering Options If Available -->
-    <div class="text-left form-inline {{ filter_view }}">
+    <!-- TODO: error-msg class is getting overridden somewhere ... -->
+    <span class="error-msg"> {{error_msg}} </span>
+    <div class="text-left form-inline {{ filters_view }}">
         <form action="/filtered_results" method="post">
             <div class="form-group">
                 <strong>Filter By: </strong><br>
                 <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
                     <label>Min Follower Count</label>
-                    <input type="text" class="form-control" name="minFollowers">
+                    <input type="text" class="form-control" name="minFollowers" value="{{ minFollowers }}">
                 </div>
                 <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
                     <label>Max Follower Count</label>
-                    <input type="text" class="form-control" name="maxFollowers">
+                    <input type="text" class="form-control" name="maxFollowers" value="{{ maxFollowers }}">
                 </div>
                 <input type="submit" value="Apply">
             </div>
