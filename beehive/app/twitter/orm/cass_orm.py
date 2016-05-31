@@ -17,10 +17,10 @@ class Cassandra(object):
 	# output:																																			#
 	# desc:		Insert a hashtag-username pair whenever a hashtag is searched				#
 	###############################################################################
-	def new_hashtag(self, hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions):
+	def new_hashtag(self, hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions, source):
 		logfile.info("Inserting/Updateing to hashtagusers table: %s" % hashtag)
-		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions) VALUES(?,?,?,?,?,?,?,?,?,?,?);""")
-		self.session.execute(query,[hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions])
+		query = self.session.prepare("""INSERT INTO hashtagusers(hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions, source) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?);""")
+		self.session.execute(query,[hashtag, username, fullname, avglikes, avgretweets, followers, numtweets, tweetcreated, tweettext, userrank, numinteractions, source])
 
 	def get_hashtag(self, hashtag):
 		logfile.info("Query * from hashtagusers : #%s" % hashtag)
@@ -85,9 +85,9 @@ class Cassandra(object):
 	# output:																																			#
 	# desc:		Insert a user with stats to the user table													#
 	###############################################################################
-	def new_user(self, username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank):
-		query = self.session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank) VALUES(?,?,?,?,?,?,?,?,?);""")
-		self.session.execute(query, [username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank])
+	def new_user(self, username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank, source):
+		query = self.session.prepare("""INSERT INTO users(username, fullname, lastupdated, avglikes, avgretweets, followers, numappeared, numtweets, userrank, source) VALUES(?,?,?,?,?,?,?,?,?,?);""")
+		self.session.execute(query, [username, fullname, lastupdated, avelikes, averetweets, followers, numappeared, numtweets, userrank, source])
 
 	def get_user(self,username):
 		query = "SELECT * FROM users WHERE username = '%s'" % username

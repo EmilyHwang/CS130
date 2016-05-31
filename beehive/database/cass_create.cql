@@ -15,6 +15,7 @@ CREATE TABLE HashtagUsers (
 	followers int,
 	numTweets int,
 	numInteractions int,
+	source text,
 	PRIMARY KEY (hashtag, username)
 );
 
@@ -28,5 +29,6 @@ CREATE TABLE Users (
 	followers int,
 	numTweets int,
 	userRank double,
+	source text,
 	PRIMARY KEY (username, lastUpdated)
 ) WITH CLUSTERING ORDER BY (lastUpdated DESC);

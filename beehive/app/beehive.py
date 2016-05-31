@@ -11,9 +11,12 @@ import twitter.twitter_auth as twitter_auth
 
 from twitter.twitter_search import Search
 from twitter.twitter_interact import Interact
+from instagram.instagram_search import InstagramSearch
 
 # Logging
 import logging, logging.config, yaml
+
+import urllib, urlparse
 
 # Configurations
 DEBUG = False
@@ -22,11 +25,15 @@ SECRET_KEY = 'SUPER SECRET CIA_FBI_NSA DEVELOPMENT KEY'
 USER_NAME = ''
 PASSWORD = ''
 
+REDIRECT_URI = "http://127.0.0.1:5000/authorized"
+
 # Create Flask application
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.secret_key = SECRET_KEY
 
+CLIENT_ID = "88c6f49c38f540fa8fa70521b35c50d3"
+CLIENT_SECRET = "1f888dc7f45c4c5fb5823052807ed9fe"
 
 # For user-level authentication
 oauth = OAuth()
@@ -39,10 +46,26 @@ twitter_oauth = oauth.remote_app('twitter',
 								 consumer_secret=twitter_auth.CONSUMER_SECRET
 								 )
 
+instagram_oauth = oauth.remote_app('instagram',
+								 base_url='https://api.instagram.com',
+								 authorize_url='https://api.instagram.com/oauth/authorize',
+								 request_token_url=None,
+								 request_token_params = {'response_type': 'token', 'scope':'public_content'},
+								 access_token_url='https://api.instagram.com/oauth/access_token',
+								 access_token_method='POST',
+								 access_token_params = {},
+								 consumer_key=CLIENT_ID,
+								 consumer_secret=CLIENT_SECRET
+								 )
+
 
 @twitter_oauth.tokengetter
 def get_twitter_token(token=None):
 	return session.get('twitter_token')
+
+@instagram_oauth.tokengetter	
+def get_instagram_token(token=None):
+	return session.get('instagram_token')
 
 
 # Global variables for filtering and pagination
@@ -95,12 +118,20 @@ def index():
 def search():
 	# Before completing the search, first make sure that the user is logged in.
 	twitter_token = session.get('twitter_token')
+	instagram_token = session.get('instagram_access_token')
 	if twitter_token is None:
 		logfile.info("User is not logged in. Redirect")
 		logconsole.info("User is not logged in. Redirect")
 		session.clear()
 		session['query'] = request.form['user-input']
-		return redirect(url_for('login'))
+		return redirect(url_for('login_twitter'))
+	
+	if instagram_token is None:
+		session.clear()
+		session['query'] = request.form['user-input']
+		return redirect(url_for('login_instagram'))
+		
+	logfile.info("instagram token: " + instagram_token)
 
 	if request.method == 'POST':
 		access_token = twitter_token[0]
@@ -113,6 +144,9 @@ def search():
 		logfile.info("Search initiated for hashtag: #%s" % query)
 
 		search = Search(query, auth)
+		
+		search_instagram = InstagramSearch(instagram_token, query)
+		search_instagram.search_instagram()
 
 		# Get a list of users back
 		influencers = search.search_users()
@@ -252,17 +286,35 @@ def getInfluencersByCategory(category):
 	return render_template('index.html', users=users, links=links, categories=cats)
 
 
-@app.route('/login')
-def login():
+@app.route('/login_twitter')
+def login_twitter():
 	return twitter_oauth.authorize(callback=url_for('oauth_authorized',
 									next=request.args.get('next') or request.referrer or None))
-
+@app.route('/login_instagram')
+def login_instagram():
+	if session.has_key('instagram_access_token'):
+		del session['instagram_access_token']
+	return instagram_oauth.authorize(callback=REDIRECT_URI)
 
 @app.route('/logout')
 def logout():
 	session.clear()
 	return redirect('/index')
-
+	
+@app.route('/authorized')
+@instagram_oauth.authorized_handler
+def authorized(resp):
+	try:
+		pass
+	except Exception:
+		pass
+	session.clear()
+	print request
+	print resp
+	access_token = request.args.get('access_token')
+	session['instagram_access_token'] = access_token
+	logfile.info("authorized instagram with access_token: " + access_token)
+	return redirect('/index')
 
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
@@ -273,9 +325,10 @@ def oauth_authorized(response):
 		return redirect(next_url)
 
 	# Since auth is defined in twitter.py. Later change twitter to twitter_search
+	print response
 	access_token = response['oauth_token']
 	access_token_secret = response['oauth_token_secret']
-	session['screen_name'] = response['screen_name']
+	session['twitter_screen_name'] = response['screen_name']
 
 	session['twitter_token'] = (
 		response['oauth_token'],			# access token

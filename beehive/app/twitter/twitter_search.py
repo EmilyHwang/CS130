@@ -68,7 +68,7 @@ class Search:
 				# Store this information inside Cassandra HashtagUsers table even though there is no complete info
 				# Next time when query, there will be information about the user and this hashtag
 				# If this user is in the results of the query, query user timeline
-				self.cass.new_hashtag(self.hashtag, tweet_user, tweet.user.name, 0, 0, 0, 0, tweet_datetime, tweet.text, 0, 0)
+				self.cass.new_hashtag(self.hashtag, tweet_user, tweet.user.name, 0, 0, 0, 0, tweet_datetime, tweet.text, 0, 0, 'twitter')
 
 				mentions = tweet.entities['user_mentions']
 				mentioned_users.extend([mention['screen_name'] for mention in mentions])
@@ -125,9 +125,9 @@ class Search:
 
 			cassUsers = self.cass.get_user(user)
 			if not cassUsers:
-				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank)
+				self.cass.new_user(user, user_info['fullname'], datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], 1, user_info['numTweets'], rank, 'twitter')
 
-				self.cass.new_hashtag(query, user, user_info['fullname'], user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0)
+				self.cass.new_hashtag(query, user, user_info['fullname'], user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], rank, 0, 'twitter')
 				potential_influencers[user]['userRank'] = rank
 
 			else: # user already associated with another hashtag. need to update time appeared
@@ -135,9 +135,9 @@ class Search:
 				for most_recent_user in cassUsers:
 					cassUser = most_recent_user
 				updatedNumAppeared = cassUser.numappeared + 1
-				self.cass.new_user(user, cassUser.fullname, datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank)
+				self.cass.new_user(user, cassUser.fullname, datetime.now(), user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], updatedNumAppeared, user_info['numTweets'], cassUser.userrank, 'twitter')
 
-				self.cass.new_hashtag(query, user, cassUser.fullname, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank, 0)
+				self.cass.new_hashtag(query, user, cassUser.fullname, user_info['avgLikes'], user_info['avgRetweets'], user_info['followers'], user_info['numTweets'], user_info['tweetCreated'], user_info['tweetText'], cassUser.userrank, 0, 'twitter')
 				potential_influencers[user]['userRank'] = rank
 
 		return potential_influencers
