@@ -13,68 +13,101 @@
 {% block page_description %}
 	<div class="row">
 		<h1>Social Media Analytics for Everyone</h1>
-
-		<p class="lead">
-		</p>
+        <br>
+		<br>
 	</div>
 {% endblock page_description %}
 
 {% block content %}
 
-    <!-- (I) Trending Influencers -->
-    <span class="error-msg">{{ error_msg }}</span>
-    <span class="text-left"><h2>Trending Now</h2></span>
-    <br>
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-sm-2 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+            <li class="text-left">Browse Influencers <br>By Category</li>
+            <br>
 
-	{% for row in users | batch(3) %}
-	<div class="row flex">
-        {% set i = 0 %}
-		{% for user in row %}
-            <div class="col-sm-4 col-md-4 col-lg-4">
-                <div class="panel panel-default text-left">
+            {% for entry in categories %}
 
-                    <!-- (1) heading -->
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-sm-2 col-md-2 col-lg-2">
-                                <img src={{ user['profile_image_url'] }} alt="">
-                            </div>
-                            <div class="col-sm-10 col-md-10 col-lg-10">
-                                <h3><a href="{{ links[i] }}">@{{ user['screen_name'] }}</a></h3>
-                                <small><em><strong>{{ user['name'] }}</strong></em></small>
-                            </div>
-                        </div> <!-- end class="row" -->
-                    </div>
+                <div class="dropdown text-left">
 
-                    <!-- (2) body -->
-                    <div class="panel-body">
-                        {{ user['status']['text'] }}
-                    </div>
+                    <button class="sidebar-btn btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+                        <span class="category-name">{{ entry['categoryName'] }}</span>
+                    </button>
 
-                    <!-- (3) footer -->
-                    <div class="panel-footer text-right">
-                        <span class="glyphicon glyphicon-retweet"></span>&nbsp;{{ user['status']['retweet_count'] }}&nbsp;
-                        <span class="glyphicon glyphicon-heart"></span>&nbsp;{{ user['status']['favorite_count'] }}
+                    <ul class="dropdown-menu dropdown-menu-right">
+                        {% for subcategory in entry['subCategories'] %}
+                            <li class="category-clickable"><a href="/influencers/{{subcategory}}" target="_self">
+                            {{ subcategory }}
+                        </a></li>&nbsp;
+                        {% endfor %}
+                    </ul>
+                    <br>
+
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- Sidebar END -->
+
+    <div class="col-sm-9 col-md-9 main">
+
+        <!-- (I) Trending Influencers -->
+        <span class="error-msg">{{ error_msg }}</span>
+        <span class="text-left"><h2>Trending Now</h2></span>
+        <br>
+
+        {% for row in users | batch(2) %}
+            {% set i = 0 %}
+        <div class="row flex">
+            {% for user in row %}
+                <div class="col-sm-4 col-md-4 col-lg-4">
+                    <div class="panel panel-default text-left">
+
+                        <!-- (1) heading -->
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-sm-2 col-md-2 col-lg-2">
+                                    <img src={{ user['profile_image_url'] }} alt="">
+                                </div>
+                                <div class="col-sm-10 col-md-10 col-lg-10">
+                                    <h3><a href="{{ links[i] }}">@{{ user['screen_name'] }}</a></h3>
+                                    <small><em><strong>{{ user['name'] }}</strong></em></small>
+                                </div>
+                            </div> <!-- end class="row" -->
+                        </div>
+
+                        <!-- (2) body -->
+                        <div class="panel-body">
+                            {{ user['status']['text'] | safe }}
+                        </div>
+
+                        <!-- (3) footer -->
+                        <div class="panel-footer text-right">
+                            <span class="glyphicon glyphicon-retweet"></span>&nbsp;{{ user['status']['retweet_count'] }}&nbsp;
+                            <span class="glyphicon glyphicon-heart"></span>&nbsp;{{ user['status']['favorite_count'] }}
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% set i = i + 1 %}
-	    {% endfor %}
-	</div>
-	{% endfor %}
-
-    <!-- (II) Categories -->
-    <span class="text-left"><h2>Browse Influencers By Category</h2></span>
-    {% for entry in categories %}
-        <div class="text-left">
-                <span class="category-name">{{ entry['categoryName'] }} :</span>
-            {% for subcategory in entry['subCategories'] %}
-                <span class="category-clickable"><a href="/influencers/{{subcategory}}" target="_self">
-                    {{ subcategory }}
-                </a></span>&nbsp;
+                {% set i = i + 1 %}
             {% endfor %}
-            <br>
         </div>
-    {% endfor %}
+        {% endfor %}
 
+        <!-- (II) Categories -->
+        <span class="text-left"><h2>Browse Influencers By Category</h2></span>
+        {% for entry in categories %}
+            <div class="text-left">
+                    <span class="category-name">{{ entry['categoryName'] }} :</span>
+                {% for subcategory in entry['subCategories'] %}
+                    <span class="category-clickable"><a href="/influencers/{{subcategory}}" target="_self">
+                        {{ subcategory }}
+                    </a></span>&nbsp;
+                {% endfor %}
+                <br>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
 {% endblock content %}
