@@ -251,7 +251,7 @@ def paginate():
                 # add new page of influencers to origData
                 origData.append(potential_influencers)
                 leftoverData = leftover_influencers
-                logfile.info("New number of results left: %d" % leftoverData)
+                logfile.info("New number of results left: %d" % len(leftoverData))
 
                 links = getProfileLinks(potential_influencers)
 
