@@ -108,6 +108,7 @@
                             <td>
 							<form action="/follow" method="post">
 								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
+                                <input type="hidden" value="{{ influencer_info['followStatus'] }}" name="followStatus">
                                 {% if not influencer_info['followStatus'] %}
 								    <button class="btn follow-btn" type="submit">Follow</button>
                                 {% else %}
