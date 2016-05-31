@@ -48,7 +48,7 @@
 
                     <!-- (2) body -->
                     <div class="panel-body">
-                        {{ user['status']['text'] }}
+                        {{ user['status']['text'] | safe }}
                     </div>
 
                     <!-- (3) footer -->

@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
 import math
+import string
+import re
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -60,12 +62,50 @@ FILTERS_DISABLED = "hidden"	# hide filters when paginating
 BTN_ENABLED = ""			# used for pagination
 BTN_DISABLED = "disabled='disabled'" # used for pagination
 
-# Helper functions used across multiple routes
+# Helper Functions
+
+# not suitable for use with random_influencers
 def getProfileLinks(potential_influencers):
 	links = []
+	print potential_influencers
 	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
 	return links
+
+# Insert clickable links into Twitter tweet text
+# tweet_in = user['status']['text']
+# entities = user['status']['entities']
+def insertTextLinks(tweet, entities):
+	tweet_in = tweet
+	# replace mentions
+	if len(entities['user_mentions']) != 0:
+		print entities['user_mentions']
+		for user in entities['user_mentions']:
+			profile_link = "<a href= " + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + " </a>"
+			tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
+			# screen_name = '@' + user['screen_name']
+			# re.findall(screen_name, tweet, flags=re.IGNORECASE)
+			# re.sub(screen_name, matchcase())
+			# re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
+			print profile_link
+			print tweet
+		return tweet
+	# no replacements to be done
+	else:
+		return tweet_in
+
+def matchcase(word):
+    def replace(m):
+        text = m.group()
+        if text.isupper():
+            return word.upper()
+        elif text.islower():
+            return word.lower()
+        elif text[0].isupper():
+            return word.capitalize()
+        else:
+            return word
+    return replace
 
 
 # View Routing
@@ -83,10 +123,16 @@ def index():
 	logfile.info('Get random influencers from subcategory')
 	# get 3 random users
 	users = rand_influencers.get_users(3)
+	print users
 
 	links = []
 	for user in users:
 		links.append('https://twitter.com/' + user['screen_name'])
+
+	# TODO: IN PROGRESS
+	# # make links in tweet clickable
+	# for user in users:
+	# 	user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
@@ -213,6 +259,7 @@ def paginate():
 	error_msg = "WHOOPS! Well that wasn't supposed to happen. Please try again."
 	return redirect('/index', error_msg=error_msg)
 
+
 @app.route('/search-page')
 def search_page():
 	return render_template('search_page.html')
@@ -260,7 +307,9 @@ def getInfluencersByCategory(category):
 	# get 12 users to display
 	users = rand_influencers.get_users_by_category(12, category)
 
-	links = getProfileLinks(users)
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
