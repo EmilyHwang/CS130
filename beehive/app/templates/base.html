@@ -64,6 +64,16 @@
                 <li id="nav-search"><a href="/search-page">Search</a></li>
                 <li id="nav-about"><a href="/about">About</a></li>
             </ul>
+
+            <form id="search-form" action="/search" onsubmit="displayLoadingAnim();" method="post">
+                <div class="input-group">
+                    <input id="hashtag-searchbar" type="text" name="user-input" class="form-control" placeholder="Search for...">
+                                <span class="input-group-btn">
+                                    <input id="submitBtn" class="btn btn-default" type="submit" value="Go!">
+                                </span>
+                </div>
+            </form>
+
             <ul class="nav navbar-nav navbar-right">
                 <li id="nav-login">
                     {% if session['screen_name'] is defined %}
@@ -85,29 +95,6 @@
         <div>
             {% block page_description %}{% endblock page_description %}
         </div>
-
-        {# Please note the difference:
-         # /search (search bar) => search_results.html or search_page.html
-         # /search_page (on nav bar) => search_page.html
-         #}
-        <br>
-        {# Hashtag search bar - by default every page has this #}
-        <div class="row">
-            <div class="col-lg-3"></div>
-            <div class="col-lg-6">
-				<form action="/search" onsubmit="displayLoadingAnim();" method="post">
-					<div class="input-group">
-                        <input id="hashtag-searchbar" type="text" name="user-input" class="form-control" placeholder="Search for...">
-
-                        <span class="input-group-btn">
-                            <input id="submitBtn" class="btn btn-default" type="submit" value="Go!">
-                        </span>
-					</div>
-				</form>
-            </div>
-            <div class="col-lg-3"></div>
-        </div>
-        <br>
 
         {# When the search button is clicked, a loading animation is displayed #}
         <div class="row">
