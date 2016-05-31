@@ -20,6 +20,12 @@
         .follow-btn {
             background-color: #ebd467;
             color: #2c2e38;
+            width: 81px;
+        }
+        .unfollow-btn{
+            background-color: #6A67EB;
+            color: #2c2e38;
+            width: 81px;
         }
     </style>
 {% endblock styles %}
@@ -102,7 +108,11 @@
                             <td>
 							<form action="/follow" method="post">
 								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
-								<button class="btn follow-btn" type="submit">Follow</button>
+                                {% if not influencer_info['followStatus'] %}
+								    <button class="btn follow-btn" type="submit">Follow</button>
+                                {% else %}
+                                    <button class="btn unfollow-btn" type="submit">Unfollow</button>
+                                {% endif %}
 							</form>
                             </td>
 							{% set i = i + 1 %}

@@ -168,10 +168,12 @@ class Search:
 			leftover = users.copy()
 			for user in users:
 				user_info = self.query_user_timeline(user)
+
 				if user_info is not None:
 					all_info = users[user].copy()
 					all_info.update(user_info)
 					potential_influencers[user] = all_info
+					potential_influencers[user]['followStatus'] = self.api.show_friendship(target_screen_name=user)[1].followed_by
 				leftover.pop(user, None)
 
 				count += 1
@@ -197,13 +199,27 @@ class Search:
 					# Check whether it needs to use Twitter API or not
 					if user.followers != 0:
 						logfile.info("User %s has information in our database! No need to API" % user.username)
-						potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user.followers, 'numTweets': user.numtweets, 'avgLikes': user.avglikes, 'avgRetweets': user.avgretweets}
+						potential_influencers[user.username] = {'fullname': user.fullname, 
+																										'tweetText': user.tweettext, 
+																										'tweetCreated': user.tweetcreated, 
+																										'followers': user.followers, 
+																										'numTweets': user.numtweets, 
+																										'avgLikes': user.avglikes, 
+																										'avgRetweets': user.avgretweets,
+																										'followStatus': self.api.show_friendship(target_screen_name=user.username)[1].followed_by}
 					else:
 						# This object is a cassandra object but it's not updated
 						logfile.info("User %s doesn't have information :( Search API" % user.username)
 						user_info = self.query_user_timeline(user.username)
 						if user_info['followers'] != 0:
-							potential_influencers[user.username] = {'fullname': user.fullname, 'tweetText': user.tweettext, 'tweetCreated': user.tweetcreated, 'followers': user_info['followers'], 'numTweets': user_info['numTweets'], 'avgLikes': user_info['avgLikes'], 'avgRetweets': user_info['avgRetweets']}
+							potential_influencers[user.username] = {'fullname': user.fullname, 
+																											'tweetText': user.tweettext, 
+																											'tweetCreated': user.tweetcreated, 
+																											'followers': user_info['followers'], 
+																											'numTweets': user_info['numTweets'], 
+																											'avgLikes': user_info['avgLikes'], 
+																											'avgRetweets': user_info['avgRetweets'],
+																											'followStatus': self.api.show_friendship(target_screen_name=user.username)[1].followed_by}
 
 						count += 1
 
