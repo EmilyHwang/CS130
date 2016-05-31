@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
 import math
+import json
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -351,7 +352,9 @@ def follow():
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 		interaction = Interact(query, auth)
 		interaction.follow_user(user_to_follow)
+	
 	potential_influencers = origData[currPage]
+	potential_influencers[user_to_follow]['followStatus'] = True
 
 	links = getProfileLinks(potential_influencers)
 
@@ -369,7 +372,8 @@ def follow():
 	if pmax == 0:
 		filters_view = FILTERS_ENABLED
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	return json.dumps({'status': 'ok'})
+	# return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
 
 if __name__ == '__main__':
