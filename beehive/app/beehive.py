@@ -130,7 +130,10 @@ def search():
 
 		global pmax
 		num_results = len(potential_influencers) + len(leftover_influencers)
-		pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
+		print num_results
+		print math.ceil(num_results/float(RESULTS_PER_PAGE))
+		# cast to float to prevent rounding before ceil() is called
+		pmax = math.ceil(num_results/float(RESULTS_PER_PAGE)) - 1
 
 		links = getProfileLinks(potential_influencers)
 
@@ -225,19 +228,32 @@ def applyFilters():
 	logfile.info("original data")
 	logfile.info(origData)
 
-	minFollowers = request.form['minFollowers']
-	maxFollowers = request.form['maxFollowers']
-
-
-	filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
-
-	links = getProfileLinks(filtered_influencers)
-
 	left_btn_view = BTN_DISABLED
 	right_btn_view = BTN_DISABLED
 	filters_view = FILTERS_ENABLED
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	minFollowers = request.form['minFollowers']
+	maxFollowers = request.form['maxFollowers']
+
+	# validate user input
+	# TODO: display an error message to user instead of routing to index
+	try:
+		minFollowers = int(minFollowers)
+		maxFollowers = int(maxFollowers)
+	except ValueError:
+		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+		links = getProfileLinks(origData[0])
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
+
+	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers:
+		return redirect('/index')
+
+	all_results = origData[0]
+	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers)
+
+	links = getProfileLinks(filtered_influencers)
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers)
 
 
 @app.route('/influencers/<path:category>', methods=['GET'])

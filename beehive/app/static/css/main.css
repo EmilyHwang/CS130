@@ -89,3 +89,9 @@ h1, h2 {
     text-decoration: underline;
     font-size: larger;
 }
+
+/* error message styles */
+.error-msg {
+    font-color: #ff3333;
+    font-size: larger;
+}
