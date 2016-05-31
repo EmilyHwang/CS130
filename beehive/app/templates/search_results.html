@@ -14,18 +14,22 @@
         .td-influencer {
             font-weight: 700;
         }
-        .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+        /*.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
             background-color: #464553;
-        }
+        }*/
         .follow-btn {
-            background-color: #ebd467;
-            color: #2c2e38;
-            width: 81px;
+            width: 81px;   
+            -webkit-border-radius: 5;
+            -moz-border-radius: 5;
+            border-radius: 5px;
+            color: #ffffff;
+            background: #EBD467;
+            text-decoration: none;
         }
-        .unfollow-btn{
-            background-color: #6A67EB;
-            color: #2c2e38;
-            width: 81px;
+
+        .follow-btn:hover {
+          background: #CAB13F;
+          text-decoration: none;
         }
     </style>
 {% endblock styles %}
@@ -106,7 +110,7 @@
 							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
 							<td class="text-center">{{ influencer_info['userRank'] }}</td>
                             <td>
-							<form action="/follow" method="post">
+							<form action="/follow" method="post" class="results">
 								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
                                 <input type="hidden" value="{{ influencer_info['followStatus'] }}" name="followStatus">
                                 {% if not influencer_info['followStatus'] %}

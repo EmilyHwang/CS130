@@ -401,14 +401,13 @@ def follow():
 		access_token_secret = twitter_token[1]
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 		interaction = Interact(query, auth)
-		if not request.form['followStatus']:
+		if request.form['followStatus'] == 'False':
 			interaction.follow_user(user_to_follow)
-			origData[currPage][user_to_follow]['followStatus'] = True
 		else:
 			interaction.unfollow_user(user_to_follow)
-			origData[currPage][user_to_follow]['followStatus'] = False
 	
 	potential_influencers = origData[currPage]
+	potential_influencers[user_to_follow]['followStatus'] = not potential_influencers[user_to_follow]['followStatus'] 
 
 	links = getProfileLinks(potential_influencers)
 
