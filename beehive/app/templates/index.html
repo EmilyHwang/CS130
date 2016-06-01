@@ -57,10 +57,12 @@
         <span class="text-left"><h2>Trending Now</h2></span>
         <br>
 
+        <!-- 'set' statements for computing index to access corresponding link -->
+        {% set j = 0 %}
         {% for row in users | batch(2) %}
-            {% set i = 0 %}
         <div class="row flex">
             {% for user in row %}
+                {% set i = j + loop.index0 %}
                 <div class="col-sm-5 col-md-5 col-lg-5">
                     <div class="panel panel-default text-left">
 
@@ -89,9 +91,10 @@
                         </div>
                     </div>
                 </div>
-                {% set i = i + 1 %}
             {% endfor %}
         </div>
+        <!-- + 2 matches batch number -->
+        {% set j = j + 2 %}
         {% endfor %}
 
         <!-- (II) Categories -->

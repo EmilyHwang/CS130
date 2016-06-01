@@ -82,7 +82,7 @@ def insertTextLinks(tweet, entities):
 	tweet_in = tweet
 	# replace mentions
 	if len(entities['user_mentions']) != 0:
-		print entities['user_mentions']
+		# print entities['user_mentions']
 		for user in entities['user_mentions']:
 			profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
 			#tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
@@ -93,6 +93,24 @@ def insertTextLinks(tweet, entities):
 			# print profile_link
 			# print tweet
 		return tweet
+
+	#replace hashtags
+	# if len(entities['hashtags']) != 0:
+	# 	for hashtag in entities['hashtags']:
+	# 		tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
+	# 		tag = '#' + hashtag['text']
+	# 		tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
+	# 		print tag_link
+	# 		print tweet
+	# 	return tweet
+
+	#replace URLs
+	# if len(entities['urls']) != 0:
+	# 	for url in entities['urls']:
+	# 		url_link = "<a href=" + url['expanded_url'] + "'>" + url['display_url'] + "</a>"
+	# 		tco_url = url['url']
+	# 		tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
+	# 	return tweet
 
 	# no replacements to be done
 	else:
