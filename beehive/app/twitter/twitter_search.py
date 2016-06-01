@@ -199,6 +199,10 @@ class Search:
 					# Check whether it needs to use Twitter API or not
 					if user.followers != 0:
 						logfile.info("User %s has information in our database! No need to API" % user.username)
+						try:
+							followStatus = self.api.show_friendship(target_screen_name=user.username)[1].followed_by
+						except:
+							followStatus = False
 						potential_influencers[user.username] = {'fullname': user.fullname, 
 																										'tweetText': user.tweettext, 
 																										'tweetCreated': user.tweetcreated, 
@@ -206,12 +210,17 @@ class Search:
 																										'numTweets': user.numtweets, 
 																										'avgLikes': user.avglikes, 
 																										'avgRetweets': user.avgretweets,
-																										'followStatus': self.api.show_friendship(target_screen_name=user.username)[1].followed_by}
+																										'followStatus': followStatus}
 					else:
 						# This object is a cassandra object but it's not updated
 						logfile.info("User %s doesn't have information :( Search API" % user.username)
 						user_info = self.query_user_timeline(user.username)
+
 						if user_info['followers'] != 0:
+							try:
+								followStatus = self.api.show_friendship(target_screen_name=user.username)[1].followed_by
+							except:
+								followStatus = False
 							potential_influencers[user.username] = {'fullname': user.fullname, 
 																											'tweetText': user.tweettext, 
 																											'tweetCreated': user.tweetcreated, 
@@ -219,7 +228,7 @@ class Search:
 																											'numTweets': user_info['numTweets'], 
 																											'avgLikes': user_info['avgLikes'], 
 																											'avgRetweets': user_info['avgRetweets'],
-																											'followStatus': self.api.show_friendship(target_screen_name=user.username)[1].followed_by}
+																											'followStatus': followStatus}
 
 						count += 1
 
