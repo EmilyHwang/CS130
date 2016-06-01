@@ -5,6 +5,7 @@ import math
 import json
 import string
 import re
+import time
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -34,18 +35,18 @@ app.secret_key = SECRET_KEY
 # For user-level authentication
 oauth = OAuth()
 twitter_oauth = oauth.remote_app('twitter',
-                                 base_url='https://api.twitter.com/1/',
-                                 request_token_url='https://api.twitter.com/oauth/request_token',
-                                 access_token_url='https://api.twitter.com/oauth/access_token',
-                                 authorize_url='https://api.twitter.com/oauth/authenticate',
-                                 consumer_key=twitter_auth.CONSUMER_KEY,
-                                 consumer_secret=twitter_auth.CONSUMER_SECRET
-                                 )
+								 base_url='https://api.twitter.com/1/',
+								 request_token_url='https://api.twitter.com/oauth/request_token',
+								 access_token_url='https://api.twitter.com/oauth/access_token',
+								 authorize_url='https://api.twitter.com/oauth/authenticate',
+								 consumer_key=twitter_auth.CONSUMER_KEY,
+								 consumer_secret=twitter_auth.CONSUMER_SECRET
+								 )
 
 
 @twitter_oauth.tokengetter
 def get_twitter_token(token=None):
-    return session.get('twitter_token')
+	return session.get('twitter_token')
 
 
 # Global variables for filtering and pagination
@@ -59,7 +60,7 @@ pmax = 0					# max page
 # const globals
 RESULTS_PER_PAGE = 10		# num results to display per page; must correspond w/ num results returned from back end
 FILTERS_ENABLED = ""		# show filters when all results are available
-FILTERS_DISABLED = "hidden"	# hide filters when paginating
+FILTERS_DISABLED = "hidden" # hide filters when paginating
 BTN_ENABLED = ""			# used for pagination
 BTN_DISABLED = "disabled='disabled'" # used for pagination
 
@@ -68,47 +69,47 @@ BTN_DISABLED = "disabled='disabled'" # used for pagination
 # not suitable for use with random_influencers
 def getProfileLinks(potential_influencers):
 
-    links = []
-    print potential_influencers
-    for name in potential_influencers:
-        links.append('https://twitter.com/' + name)
-    return links
+	links = []
+	print potential_influencers
+	for name in potential_influencers:
+		links.append('https://twitter.com/' + name)
+	return links
 
 
 # Insert clickable links into Twitter tweet text
 # tweet_in = user['status']['text']
 # entities = user['status']['entities']
 def insertTextLinks(tweet, entities):
-    tweet_in = tweet
-    # replace mentions
-    if len(entities['user_mentions']) != 0:
-        print entities['user_mentions']
-        for user in entities['user_mentions']:
-            profile_link = "<a href= " + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + " </a>"
-            tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
-            # screen_name = '@' + user['screen_name']
-            # re.findall(screen_name, tweet, flags=re.IGNORECASE)
-            # re.sub(screen_name, matchcase())
-            # re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
-            print profile_link
-            print tweet
-        return tweet
-    # no replacements to be done
-    else:
-        return tweet_in
+	tweet_in = tweet
+	# replace mentions
+	if len(entities['user_mentions']) != 0:
+		print entities['user_mentions']
+		for user in entities['user_mentions']:
+			profile_link = "<a href= " + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + " </a>"
+			tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
+			# screen_name = '@' + user['screen_name']
+			# re.findall(screen_name, tweet, flags=re.IGNORECASE)
+			# re.sub(screen_name, matchcase())
+			# re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
+			print profile_link
+			print tweet
+		return tweet
+	# no replacements to be done
+	else:
+		return tweet_in
 
 def matchcase(word):
-    def replace(m):
-        text = m.group()
-        if text.isupper():
-            return word.upper()
-        elif text.islower():
-            return word.lower()
-        elif text[0].isupper():
-            return word.capitalize()
-        else:
-            return word
-    return replace
+	def replace(m):
+		text = m.group()
+		if text.isupper():
+			return word.upper()
+		elif text.islower():
+			return word.lower()
+		elif text[0].isupper():
+			return word.capitalize()
+		else:
+			return word
+	return replace
 
 
 # View Routing
@@ -116,280 +117,288 @@ def matchcase(word):
 @app.route('/')
 @app.route('/index')
 def index():
-    # 'data' is a variable that passes info to template for rendering
-    # So for example, place stuff we retrieve from the database, api call, etc. into data
-    #data = {}
-    logfile.info('==== Landing Page ====')
-    logfile.info('Get all categories')
-    cats = categories.getAllCategories()
+	# 'data' is a variable that passes info to template for rendering
+	# So for example, place stuff we retrieve from the database, api call, etc. into data
+	#data = {}
+	logfile.info('==== Landing Page ====')
+	logfile.info('Get all categories')
+	cats = categories.getAllCategories()
 
-    logfile.info('Get random influencers from subcategory')
-    # get 6 random users
-    users = rand_influencers.get_users(6)
+	logfile.info('Get random influencers from subcategory')
+	# get 6 random users
+	users = rand_influencers.get_users(6)
 
-    links = []
-    for user in users:
-        links.append('https://twitter.com/' + user['screen_name'])
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
 
-    # TODO: IN PROGRESS
-    # # make links in tweet clickable
-    # for user in users:
-    # 	user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
+	# TODO: IN PROGRESS
+	# # make links in tweet clickable
+	# for user in users:
+	#	user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
-    return render_template('index.html', users=users, links=links, categories=cats)
+	return render_template('index.html', users=users, links=links, categories=cats)
 
 
 @app.route('/search', methods=['POST'])
 def search():
-    # Before completing the search, first make sure that the user is logged in.
-    twitter_token = session.get('twitter_token')
-    if twitter_token is None:
-        logfile.info("User is not logged in. Redirect")
-        logconsole.info("User is not logged in. Redirect")
-        session.clear()
-        session['query'] = request.form['user-input']
-        return redirect(url_for('login'))
+	# Before completing the search, first make sure that the user is logged in.
+	twitter_token = session.get('twitter_token')
+	if twitter_token is None:
+		logfile.info("User is not logged in. Redirect")
+		logconsole.info("User is not logged in. Redirect")
+		session.clear()
+		session['query'] = request.form['user-input']
+		return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        access_token = twitter_token[0]
-        access_token_secret = twitter_token[1]
-        auth = twitter_auth.UserAuth(access_token, access_token_secret)
+	if request.method == 'POST':
+		access_token = twitter_token[0]
+		access_token_secret = twitter_token[1]
+		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 
-        global query
-        global search
-        query = request.form['user-input']
-        logfile.info("Search initiated for hashtag: #%s" % query)
+		global query
+		global search
+		query = request.form['user-input']
+		logfile.info("Search initiated for hashtag: #%s" % query)
 
-        search = Search(query, auth)
+		search = Search(query, auth)
+		
+		# Get a list of users back
+		start = time.time()
+		logfile.info("time started: " + str(start))
+		influencers = search.search_users()
+		
+		end = time.time()
+		logfile.info("time started: " + str(start))
+		logfile.info("Searching for: " + query)
+		logfile.info("time ended: " + str(end))
+		logfile.info("time elapsed: " + str(end-start))
+		potential_influencers = influencers['first_pull']
+		leftover_influencers = influencers['leftover']
 
-        # Get a list of users back
-        influencers = search.search_users()
-        potential_influencers = influencers['first_pull']
-        leftover_influencers = influencers['leftover']
+		# store variables for pagination
+		global origData
+		origData.append(potential_influencers)
 
-        # store variables for pagination
-        global origData
-        origData.append(potential_influencers)
+		global leftoverData
+		leftoverData = leftover_influencers
+		logfile.info("Number of results left: %d" % len(leftoverData))
 
-        global leftoverData
-        leftoverData = leftover_influencers
-        logfile.info("Number of results left: %d" % len(leftoverData))
+		global pmax
+		num_results = len(potential_influencers) + len(leftover_influencers)
+		logfile.info("Total number of results: %d" % num_results)
+		# cast to float to prevent rounding before ceil() is called
+		pmax = math.ceil(num_results/float(RESULTS_PER_PAGE)) - 1
 
-        global pmax
-        num_results = len(potential_influencers) + len(leftover_influencers)
-        logfile.info("Total number of results: %d" % num_results)
-        # cast to float to prevent rounding before ceil() is called
-        pmax = math.ceil(num_results/float(RESULTS_PER_PAGE)) - 1
+		links = getProfileLinks(potential_influencers)
 
-        links = getProfileLinks(potential_influencers)
+		# disable buttons and filters appropriately
+		left_btn_view = BTN_DISABLED
+		right_btn_view = BTN_ENABLED
+		filters_view = FILTERS_DISABLED
 
-        # disable buttons and filters appropriately
-        left_btn_view = BTN_DISABLED
-        right_btn_view = BTN_ENABLED
-        filters_view = FILTERS_DISABLED
+		if len(leftoverData) == 0:
+			pmax = 0
+			left_btn_view = BTN_DISABLED
+			right_btn_view = BTN_DISABLED
+			# enable filters if all results are returned (i.e. no pagination needed)
+			filters_view = FILTERS_ENABLED
 
-        if len(leftoverData) == 0:
-            pmax = 0
-            left_btn_view = BTN_DISABLED
-            right_btn_view = BTN_DISABLED
-            # enable filters if all results are returned (i.e. no pagination needed)
-            filters_view = FILTERS_ENABLED
-
-        return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
-    else:
-        return redirect('/search-page')
+		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	else:
+		return redirect('/search-page')
 
 # only paginate if not all results available upon query
 @app.route('/search/results', methods=['POST'])
 def paginate():
-    request_page = request.form['page']
-    global currPage
-    global origData
-    global leftoverData
+	request_page = request.form['page']
+	global currPage
+	global origData
+	global leftoverData
 
-    # prohibit filter options b/c not all results available
-    filters_view = FILTERS_DISABLED
+	# prohibit filter options b/c not all results available
+	filters_view = FILTERS_DISABLED
 
-    if request_page == "previous":
-        if currPage != 0:
-            currPage = currPage - 1
-            potential_influencers = origData[currPage]
+	if request_page == "previous":
+		if currPage != 0:
+			currPage = currPage - 1
+			potential_influencers = origData[currPage]
 
-            links = getProfileLinks(potential_influencers)
+			links = getProfileLinks(potential_influencers)
 
-            # disable buttons appropriately
-            left_btn_view = BTN_ENABLED
-            right_btn_view = BTN_ENABLED
-            if currPage == 0:
-                left_btn_view = BTN_DISABLED
+			# disable buttons appropriately
+			left_btn_view = BTN_ENABLED
+			right_btn_view = BTN_ENABLED
+			if currPage == 0:
+				left_btn_view = BTN_DISABLED
 
-            return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
-    if request_page == "next":
-        if currPage != pmax:
-            currPage = currPage + 1
+			return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	if request_page == "next":
+		if currPage != pmax:
+			currPage = currPage + 1
 
-            # disable buttons appropriately
-            left_btn_view = BTN_ENABLED
-            right_btn_view = BTN_ENABLED
-            if currPage == pmax:
-                right_btn_view = BTN_DISABLED
+			# disable buttons appropriately
+			left_btn_view = BTN_ENABLED
+			right_btn_view = BTN_ENABLED
+			if currPage == pmax:
+				right_btn_view = BTN_DISABLED
 
-            # check if results already cached before querying
-            # this could be the case if user clicked next, previous, next
-            if currPage < len(origData) :
-                potential_influencers = origData[currPage]
+			# check if results already cached before querying
+			# this could be the case if user clicked next, previous, next
+			if currPage < len(origData) :
+				potential_influencers = origData[currPage]
 
-                links = getProfileLinks(potential_influencers)
+				links = getProfileLinks(potential_influencers)
 
-                return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
-            # results not cached, go ahead and query
-            else:
-                influencers = search.search_users_detail(leftoverData)
-                potential_influencers = influencers['first_pull']
-                leftover_influencers = influencers['leftover']
+				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+			# results not cached, go ahead and query
+			else:
+				influencers = search.search_users_detail(leftoverData)
+				potential_influencers = influencers['first_pull']
+				leftover_influencers = influencers['leftover']
 
-                # add new page of influencers to origData
-                origData.append(potential_influencers)
-                leftoverData = leftover_influencers
-                logfile.info("New number of results left: %d" % len(leftoverData))
+				# add new page of influencers to origData
+				origData.append(potential_influencers)
+				leftoverData = leftover_influencers
+				logfile.info("New number of results left: %d" % len(leftoverData))
 
-                links = getProfileLinks(potential_influencers)
+				links = getProfileLinks(potential_influencers)
 
-                return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
-    # redirect to home and display error b/c we should never get here
-    error_msg = "WHOOPS! Well that wasn't supposed to happen. Please try again."
-    return redirect('/index', error_msg=error_msg)
+	# redirect to home and display error b/c we should never get here
+	error_msg = "WHOOPS! Well that wasn't supposed to happen. Please try again."
+	return redirect('/index', error_msg=error_msg)
 
 
 @app.route('/search-page')
 def search_page():
-    return render_template('search_page.html')
+	return render_template('search_page.html')
 
 
 # Note - this route should not be accessed if pagination is in effect
 @app.route('/filtered_results', methods=['POST'])
 def applyFilters():
-    logfile.info("original data")
-    logfile.info(origData)
+	logfile.info("original data")
+	logfile.info(origData)
 
-    left_btn_view = BTN_DISABLED
-    right_btn_view = BTN_DISABLED
-    filters_view = FILTERS_ENABLED
+	left_btn_view = BTN_DISABLED
+	right_btn_view = BTN_DISABLED
+	filters_view = FILTERS_ENABLED
 
-    minFollowers = request.form['minFollowers']
-    maxFollowers = request.form['maxFollowers']
+	minFollowers = request.form['minFollowers']
+	maxFollowers = request.form['maxFollowers']
 
-    # validate user input
-    try:
-        minFollowers = int(minFollowers)
-        maxFollowers = int(maxFollowers)
-    except ValueError:
-        error_msg = "WHOOPS! That can't be right ... Please check your filter range."
-        links = getProfileLinks(origData[0])
-        return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
+	# validate user input
+	try:
+		minFollowers = int(minFollowers)
+		maxFollowers = int(maxFollowers)
+	except ValueError:
+		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+		links = getProfileLinks(origData[0])
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
 
-    if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers:
-        error_msg = "WHOOPS! That can't be right ... Please check your filter range."
-        links = getProfileLinks(origData[0])
-        return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
+	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers:
+		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+		links = getProfileLinks(origData[0])
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
 
-    all_results = origData[0]
-    filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers)
+	all_results = origData[0]
+	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers)
 
-    links = getProfileLinks(filtered_influencers)
+	links = getProfileLinks(filtered_influencers)
 
-    return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers)
+	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers)
 
 
 @app.route('/influencers/<path:category>', methods=['GET'])
 def getInfluencersByCategory(category):
-    cats = categories.getAllCategories()
+	cats = categories.getAllCategories()
 
-    # get 12 users to display
-    users = rand_influencers.get_users_by_category(12, category)
+	# get 12 users to display
+	users = rand_influencers.get_users_by_category(12, category)
 
-    links = []
-    for user in users:
-        links.append('https://twitter.com/' + user['screen_name'])
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
 
-    return render_template('index.html', users=users, links=links, categories=cats)
+	return render_template('index.html', users=users, links=links, categories=cats)
 
 
 @app.route('/login')
 def login():
-    return twitter_oauth.authorize(callback=url_for('oauth_authorized',
-                                    next=request.args.get('next') or request.referrer or None))
+	return twitter_oauth.authorize(callback=url_for('oauth_authorized',
+									next=request.args.get('next') or request.referrer or None))
 
 
 @app.route('/logout')
 def logout():
-    session.clear()
-    return redirect('/index')
+	session.clear()
+	return redirect('/index')
 
 
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
 def oauth_authorized(response):
-    next_url = request.args.get('next') or url_for('index')
-    if response is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
+	next_url = request.args.get('next') or url_for('index')
+	if response is None:
+		flash(u'You denied the request to sign in.')
+		return redirect(next_url)
 
-    # Since auth is defined in twitter.py. Later change twitter to twitter_search
-    access_token = response['oauth_token']
-    access_token_secret = response['oauth_token_secret']
-    session['screen_name'] = response['screen_name']
+	# Since auth is defined in twitter.py. Later change twitter to twitter_search
+	access_token = response['oauth_token']
+	access_token_secret = response['oauth_token_secret']
+	session['screen_name'] = response['screen_name']
 
-    session['twitter_token'] = (
-        response['oauth_token'],			# access token
-        response['oauth_token_secret']		# access token secret
-    )
+	session['twitter_token'] = (
+		response['oauth_token'],			# access token
+		response['oauth_token_secret']		# access token secret
+	)
 
-    # For web apps, we need to re-build the auth handler...
-    auth = twitter_auth.UserAuth(access_token, access_token_secret)
+	# For web apps, we need to re-build the auth handler...
+	auth = twitter_auth.UserAuth(access_token, access_token_secret)
 
-    global query
-    query = session.get('query')
-    if query is None:
-        return redirect(url_for('index'))
+	global query
+	query = session.get('query')
+	if query is None:
+		return redirect(url_for('index'))
 
-    search = Search(query, auth)
+	search = Search(query, auth)
 
-    # Get a list of users back
-    influencers = search.search_users()
-    potential_influencers = influencers['first_pull']
-    leftover_influencers = influencers['leftover']
+	# Get a list of users back
+	influencers = search.search_users()
+	potential_influencers = influencers['first_pull']
+	leftover_influencers = influencers['leftover']
 
-    # store variables for pagination
-    global origData
-    origData.append(potential_influencers)
+	# store variables for pagination
+	global origData
+	origData.append(potential_influencers)
 
-    global leftoverData
-    leftoverData = leftover_influencers
+	global leftoverData
+	leftoverData = leftover_influencers
 
-    global pmax
-    num_results = len(potential_influencers) + len(leftover_influencers)
-    pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
+	global pmax
+	num_results = len(potential_influencers) + len(leftover_influencers)
+	pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
 
-    links = getProfileLinks(potential_influencers)
+	links = getProfileLinks(potential_influencers)
 
-    # disable buttons appropriately
-    left_btn_view = BTN_DISABLED
-    right_btn_view = BTN_ENABLED
-    filters_view = FILTERS_DISABLED
-    if len(leftover_influencers) == 0:
-        left_btn_view = BTN_DISABLED
-        right_btn_view = BTN_DISABLED
-        filters_view = FILTERS_ENABLED
+	# disable buttons appropriately
+	left_btn_view = BTN_DISABLED
+	right_btn_view = BTN_ENABLED
+	filters_view = FILTERS_DISABLED
+	if len(leftover_influencers) == 0:
+		left_btn_view = BTN_DISABLED
+		right_btn_view = BTN_DISABLED
+		filters_view = FILTERS_ENABLED
 
-    return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
 
 @app.route('/about')
 def about():
-    data = {}
-    return render_template('about.html', data=data)
+	data = {}
+	return render_template('about.html', data=data)
 
 
 @app.route('/follow', methods=['POST'])
@@ -433,24 +442,24 @@ def follow():
 # Error handling
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+	return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def page_not_found(e):
-    return render_template('500.html'), 500
+	return render_template('500.html'), 500
 
 
 if __name__ == '__main__':
-    # set up logging to file
-    logging.config.dictConfig(yaml.load(open('logging.conf')))
-    logfile = logging.getLogger('file')
-    logconsole = logging.getLogger('console')
+	# set up logging to file
+	logging.config.dictConfig(yaml.load(open('logging.conf')))
+	logfile = logging.getLogger('file')
+	logconsole = logging.getLogger('console')
 
-    # Turn off Werkzeug debugger
-    werk = logging.getLogger('werkzeug')
-    werk.disabled = True
-    # log.setLevel(logging.ERROR)
+	# Turn off Werkzeug debugger
+	werk = logging.getLogger('werkzeug')
+	werk.disabled = True
+	# log.setLevel(logging.ERROR)
 
-    logconsole.info('Start Application')
-    logfile.info('Start Application')
-    app.run()
+	logconsole.info('Start Application')
+	logfile.info('Start Application')
+	app.run()
