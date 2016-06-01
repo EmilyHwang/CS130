@@ -95,16 +95,16 @@ def insertTextLinks(tweet, entities):
 		return tweet
 
 	#replace hashtags
-	# if len(entities['hashtags']) != 0:
-	# 	for hashtag in entities['hashtags']:
-	# 		tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
-	# 		tag = '#' + hashtag['text']
-	# 		tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
-	# 		print tag_link
-	# 		print tweet
-	# 	return tweet
+	if len(entities['hashtags']) != 0:
+		for hashtag in entities['hashtags']:
+			tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
+			tag = '#' + hashtag['text']
+			tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
+			print tag_link
+			print tweet
+		return tweet
 
-	#replace URLs
+	# replace URLs
 	# if len(entities['urls']) != 0:
 	# 	for url in entities['urls']:
 	# 		url_link = "<a href=" + url['expanded_url'] + "'>" + url['display_url'] + "</a>"
