@@ -1,7 +1,7 @@
 // Process Asynchornous request
 
 $(function() {
-	$('form').on('submit', function (e) {
+	$('form.results').on('submit', function (e) {
 		e.stopPropagation();
 		e.preventDefault();
 
@@ -19,7 +19,6 @@ $(function() {
 				}
 			}, 
 			error: function(error) {
-				alert(error);
 			}
 
 		})

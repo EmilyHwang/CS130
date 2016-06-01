@@ -61,10 +61,11 @@ class Cassandra(object):
 		if users:
 			for user in users:
 				num_to_update = user.numinteractions + 1
+			self.session.execute(query1, [num_to_update, username, hashtag])
+
 		else:
 			logfile.error("Error in database, trying to update interaction for non-existing user/hashtat")
 				
-		self.session.execute(query1, [num_to_update, username, hashtag])
 		
 	def update_num_interaction_destroy(self, username, hashtag):
 		logfile.info("Update Number interactions destroy for user %s and hashtag %s" % (username, hashtag))
@@ -73,10 +74,11 @@ class Cassandra(object):
 		if users:
 			for user in users:
 				num_to_update = user.numinteractions - 1
+			self.session.execute(query1, [num_to_update, username, hashtag])
+			
 		else:
 			logfile.error("Error in database, trying to update interaction for non-existing user/hashtat")
 				
-		self.session.execute(query1, [num_to_update, username, hashtag])
 	
 	###############################################################################
 	# func:		new_user																														#
