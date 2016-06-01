@@ -3,7 +3,6 @@ from flask_oauth import OAuth
 from tweepy import OAuthHandler, API
 import math
 import json
-import string
 import re
 import time
 
@@ -83,16 +82,10 @@ def insertTextLinks(tweet, entities):
 	# make mentions clickable
 	if 'user_mentions' in entities:
 		if len(entities['user_mentions']) != 0:
-			# print entities['user_mentions']
 			for user in entities['user_mentions']:
 				profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
-				#tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
 				screen_name = '@' + user['screen_name']
-				# re.findall(screen_name, tweet, flags=re.IGNORECASE)
 				tweet = re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
-				#re.sub(user['screen_name'], matchcase(user['screen_name']))
-				# print profile_link
-				print tweet
 
 	# make hashtags clickable
 	if 'hashtags' in entities:
@@ -126,34 +119,7 @@ def insertTextLinks(tweet, entities):
 				tag = '\$' + cashtag['text']
 				tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
 
-	# embed extended entities
-	# if 'extended_entities' in entities:
-	# 	if len(entities['extended_entities']) != 0:
-	# 		print entities['extended_entities']
-	# 		for entity in entities['extended_entities']:
-	# 			# provide a clickable link instead if video fails to display
-	# 			url_link = entity['media_url']
-	# 			if entity['type'] == video:
-	# 				url_link = "<video controls><source src='" + entity['media_url'] + ":small' type='video/mp4'></video>"
-	# 			tco_url = entity['url']
-	# 			tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
-
-
 	return tweet
-
-# https://www.safaribooksonline.com/library/view/python-cookbook-3rd/9781449357337/ch02s06.html
-def matchcase(word):
-	def replace(m):
-		text = m.group()
-		if text.isupper():
-			return word.upper()
-		elif text.islower():
-			return word.lower()
-		elif text[0].isupper():
-			return word.capitalize()
-		else:
-			return word
-	return replace
 
 
 # View Routing
