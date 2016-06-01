@@ -135,6 +135,6 @@ h1, h2 {
 
 /* error message styles */
 .error-msg {
-    font-color: #ff3333;
+    color: #ff3333 !important;
     font-size: larger;
 }
