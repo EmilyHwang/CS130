@@ -340,6 +340,7 @@ def applyFilters():
 @app.route('/influencers/<path:category>', methods=['GET'])
 def getInfluencersByCategory(category):
 	cats = categories.getAllCategories()
+	view_category = ": " + category
 
 	# get 12 users to display
 	users = rand_influencers.get_users_by_category(12, category)
@@ -352,7 +353,7 @@ def getInfluencersByCategory(category):
 	for user in users:
 		user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
-	return render_template('index.html', users=users, links=links, categories=cats)
+	return render_template('index.html', users=users, links=links, categories=cats, view_category=view_category)
 
 
 @app.route('/login')
