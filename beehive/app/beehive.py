@@ -121,6 +121,17 @@ def insertTextLinks(tweet, entities):
 
 	return tweet
 
+# basically only checking for SQL injection right now
+# does not check for well-formulated hashtag (e.g. does not start w/ number ...)
+def notValidHashtag(query):
+	# no spaces or punctuation
+	regex = r"^[^\s\t-;!%=(){}&|@<>\$\^\*\+\.\?\\]+$"
+	# hashtag is valid
+	if re.search(regex, query):
+		return False
+	# hashtag not valid
+	return True
+
 
 # View Routing
 
@@ -168,6 +179,11 @@ def search():
 		global query
 		global search
 		query = request.form['user-input']
+		# check if hashtag is valid before querying
+		if notValidHashtag(query):
+			logfile.info("User searched invalid hashtag: #%s" % query)
+			error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
+			return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
 		logfile.info("Search initiated for hashtag: #%s" % query)
 
 		search = Search(query, auth)
@@ -376,6 +392,13 @@ def oauth_authorized(response):
 	query = session.get('query')
 	if query is None:
 		return redirect(url_for('index'))
+
+	# check if hashtag is valid before querying
+		if notValidHashtag(query):
+			logfile.info("User searched invalid hashtag: #%s" % query)
+			error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
+			return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
+		logfile.info("Search initiated for hashtag: #%s" % query)
 
 	search = Search(query, auth)
 
