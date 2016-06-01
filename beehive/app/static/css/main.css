@@ -86,11 +86,31 @@ html, body {
 }
 
 .category-name {
-
+    font-size: larger;
+    position: relative;
+    left: -13px;
 }
 
 .category-clickable {
+    font-size: larger;
+}
 
+.dropdown-menu-right {
+    background-color: darkgray;
+}
+
+.dropdown-menu>li>a {
+    position: relative;
+    top: 12px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    color: black;
+    white-space: nowrap;
+}
+
+.dropdown-menu>li>a:hover {
+    background-color: #616161;
+    color: #ebd467;
 }
 
 .lead {
