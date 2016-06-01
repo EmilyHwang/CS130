@@ -85,19 +85,21 @@ def insertTextLinks(tweet, entities):
 	if len(entities['user_mentions']) != 0:
 		print entities['user_mentions']
 		for user in entities['user_mentions']:
-			profile_link = "<a href= " + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + " </a>"
-			tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
-			# screen_name = '@' + user['screen_name']
+			profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
+			#tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
+			screen_name = '@' + user['screen_name']
 			# re.findall(screen_name, tweet, flags=re.IGNORECASE)
-			# re.sub(screen_name, matchcase())
-			# re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
-			print profile_link
-			print tweet
+			tweet = re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
+			#re.sub(user['screen_name'], matchcase(user['screen_name']))
+			# print profile_link
+			# print tweet
 		return tweet
+
 	# no replacements to be done
 	else:
 		return tweet_in
 
+# https://www.safaribooksonline.com/library/view/python-cookbook-3rd/9781449357337/ch02s06.html
 def matchcase(word):
 	def replace(m):
 		text = m.group()
@@ -132,10 +134,9 @@ def index():
 	for user in users:
 		links.append('https://twitter.com/' + user['screen_name'])
 
-	# TODO: IN PROGRESS
-	# # make links in tweet clickable
-	# for user in users:
-	#	user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
+	# make links in tweet clickable
+	for user in users:
+		user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
@@ -173,6 +174,7 @@ def search():
 		logfile.info("Searching for: " + query)
 		logfile.info("time ended: " + str(end))
 		logfile.info("time elapsed: " + str(end-start))
+
 		potential_influencers = influencers['first_pull']
 		leftover_influencers = influencers['leftover']
 
@@ -410,14 +412,13 @@ def follow():
 		access_token_secret = twitter_token[1]
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 		interaction = Interact(query, auth)
-		if not request.form['followStatus']:
+		if request.form['followStatus'] == 'False':
 			interaction.follow_user(user_to_follow)
-			origData[currPage][user_to_follow]['followStatus'] = True
 		else:
 			interaction.unfollow_user(user_to_follow)
-			origData[currPage][user_to_follow]['followStatus'] = False
-	
+
 	potential_influencers = origData[currPage]
+	potential_influencers[user_to_follow]['followStatus'] = not potential_influencers[user_to_follow]['followStatus']
 
 	links = getProfileLinks(potential_influencers)
 
