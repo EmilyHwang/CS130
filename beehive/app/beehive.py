@@ -51,7 +51,7 @@ def get_twitter_token(token=None):
 
 # Global variables for filtering and pagination
 query = ''					# query term
-origData = []				# a copy of the original data, in case user wants to change filter params
+origData = []				# a copy of the original data where each entry is a 'page' of results, in case user wants to change filter params
 leftoverData = {}			# users who we have not collected all info on yet
 search = None				# search object so we can fetch next page of results
 currPage = 0				# current page of results to display (starts at page 0)
@@ -77,45 +77,69 @@ def getProfileLinks(potential_influencers):
 
 
 # Insert clickable links into Twitter tweet text
-# tweet_in = user['status']['text']
+# tweet = user['status']['text']
 # entities = user['status']['entities']
 def insertTextLinks(tweet, entities):
-	tweet_in = tweet
-	# replace mentions
-	if len(entities['user_mentions']) != 0:
-		# print entities['user_mentions']
-		for user in entities['user_mentions']:
-			profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
-			#tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
-			screen_name = '@' + user['screen_name']
-			# re.findall(screen_name, tweet, flags=re.IGNORECASE)
-			tweet = re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
-			#re.sub(user['screen_name'], matchcase(user['screen_name']))
-			# print profile_link
-			# print tweet
-		return tweet
+	# make mentions clickable
+	if 'user_mentions' in entities:
+		if len(entities['user_mentions']) != 0:
+			# print entities['user_mentions']
+			for user in entities['user_mentions']:
+				profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
+				#tweet = string.replace(tweet, '@' + user['screen_name'], profile_link)
+				screen_name = '@' + user['screen_name']
+				# re.findall(screen_name, tweet, flags=re.IGNORECASE)
+				tweet = re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
+				#re.sub(user['screen_name'], matchcase(user['screen_name']))
+				# print profile_link
+				print tweet
 
-	#replace hashtags
-	if len(entities['hashtags']) != 0:
-		for hashtag in entities['hashtags']:
-			tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
-			tag = '#' + hashtag['text']
-			tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
-			print tag_link
-			print tweet
-		return tweet
+	# make hashtags clickable
+	if 'hashtags' in entities:
+		if len(entities['hashtags']) != 0:
+			for hashtag in entities['hashtags']:
+				tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
+				tag = '#' + hashtag['text']
+				tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
 
-	# replace URLs
-	# if len(entities['urls']) != 0:
-	# 	for url in entities['urls']:
-	# 		url_link = "<a href=" + url['expanded_url'] + "'>" + url['display_url'] + "</a>"
-	# 		tco_url = url['url']
-	# 		tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
-	# 	return tweet
+	# make URLs clickable
+	if 'urls' in entities:
+		if len(entities['urls']) != 0:
+			for url in entities['urls']:
+				url_link = "<a href=" + url['expanded_url'] + "'>" + url['display_url'] + "</a>"
+				tco_url = url['url']
+				tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
 
-	# no replacements to be done
-	else:
-		return tweet_in
+	# embed images
+	if 'media' in entities:
+		if len(entities['media']) != 0:
+			for m in entities['media']:
+				url_link = "<img src='" + m['media_url'] + ":small'>"
+				tco_url = m['url']
+				tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
+
+	# make cashtags (stock symbols) clickable
+	if 'symbols' in entities:
+		if len(entities['symbols']) != 0:
+			for cashtag in entities['symbols']:
+				tag_link = "<a href=" + "'https://twitter.com/search?q=%24" + cashtag['text'] + "&src=ctag'>$" + cashtag['text'] + "</a>"
+				tag = '\$' + cashtag['text']
+				tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
+
+	# embed extended entities
+	# if 'extended_entities' in entities:
+	# 	if len(entities['extended_entities']) != 0:
+	# 		print entities['extended_entities']
+	# 		for entity in entities['extended_entities']:
+	# 			# provide a clickable link instead if video fails to display
+	# 			url_link = entity['media_url']
+	# 			if entity['type'] == video:
+	# 				url_link = "<video controls><source src='" + entity['media_url'] + ":small' type='video/mp4'></video>"
+	# 			tco_url = entity['url']
+	# 			tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
+
+
+	return tweet
 
 # https://www.safaribooksonline.com/library/view/python-cookbook-3rd/9781449357337/ch02s06.html
 def matchcase(word):
@@ -181,12 +205,12 @@ def search():
 		logfile.info("Search initiated for hashtag: #%s" % query)
 
 		search = Search(query, auth)
-		
+
 		# Get a list of users back
 		start = time.time()
 		logfile.info("time started: " + str(start))
 		influencers = search.search_users()
-		
+
 		end = time.time()
 		logfile.info("time started: " + str(start))
 		logfile.info("Searching for: " + query)
@@ -341,6 +365,10 @@ def getInfluencersByCategory(category):
 	links = []
 	for user in users:
 		links.append('https://twitter.com/' + user['screen_name'])
+
+	# make links in tweet clickable
+	for user in users:
+		user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
