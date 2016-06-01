@@ -50,7 +50,7 @@
     </div>
     <!-- Sidebar END -->
 
-    <div class="col-sm-9 col-md-9 main">
+    <div class="col-sm-10 col-md-10 main">
 
         <!-- (I) Trending Influencers -->
         <span class="error-msg">{{ error_msg }}</span>
@@ -61,7 +61,7 @@
             {% set i = 0 %}
         <div class="row flex">
             {% for user in row %}
-                <div class="col-sm-4 col-md-4 col-lg-4">
+                <div class="col-sm-5 col-md-5 col-lg-5">
                     <div class="panel panel-default text-left">
 
                         <!-- (1) heading -->
@@ -78,7 +78,7 @@
                         </div>
 
                         <!-- (2) body -->
-                        <div class="panel-body">
+                        <div class="panel-body col-sm-12 col-md-12 col-lg-12"> <p>
                             {{ user['status']['text'] | safe }}
                         </div>
 
