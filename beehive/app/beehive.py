@@ -5,6 +5,7 @@ import math
 import json
 import re
 import time
+import sys
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -125,7 +126,7 @@ def insertTextLinks(tweet, entities):
 # does not check for well-formulated hashtag (e.g. does not start w/ number ...)
 def notValidHashtag(query):
 	# no spaces or punctuation
-	regex = r"^[^\s\t-;!%=(){}&|@<>\$\^\*\+\.\?\\]+$"
+	regex = r"^[^\s\t\-;!%=(){}&|@<>\$\^\*\+\.\?\\]+$"
 	# hashtag is valid
 	if re.search(regex, query):
 		return False
@@ -314,27 +315,75 @@ def applyFilters():
 
 	minFollowers = request.form['minFollowers']
 	maxFollowers = request.form['maxFollowers']
+	minStatuses = request.form['minStatuses']
+	maxStatuses = request.form['maxStatuses']
+
+	# set defaults for filter computation if no input provided
+	default_set = {'minFollowers': False, 'maxFollowers': False, 'minStatuses': False, 'maxStatuses': False}
+	if len(minFollowers) == 0:
+		minFollowers = 0
+		default_set['minFollowers'] = True
+	if len(maxFollowers) == 0:
+		maxFollowers = sys.maxint
+		default_set['maxFollowers'] = True
+	if len(minStatuses) == 0:
+		minStatuses = 0;
+		default_set['minStatuses'] = True
+	if len(maxStatuses) == 0:
+		maxStatuses = sys.maxint
+		default_set['maxStatuses'] = True
 
 	# validate user input
 	try:
 		minFollowers = int(minFollowers)
 		maxFollowers = int(maxFollowers)
+		minStatuses = int(minStatuses)
+		maxStatuses = int(maxStatuses)
+
 	except ValueError:
 		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
 		links = getProfileLinks(origData[0])
-		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
+		# hide default values from user
+		if default_set['minFollowers'] == True:
+			minFollowers = ""
+		if default_set['maxFollowers'] == True:
+			maxFollowers = ""
+		if default_set['minStatuses'] == True:
+			minStatuses = ""
+		if default_set['maxStatuses'] == True:
+			maxStatuses = ""
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses, error_msg=error_msg)
 
-	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers:
-		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers or minStatuses < 0 or maxStatuses < 0 or maxStatuses < minStatuses:
+		# hide default values from user
+		if default_set['minFollowers'] == True:
+			minFollowers = ""
+		if default_set['maxFollowers'] == True:
+			maxFollowers = ""
+		if default_set['minStatuses'] == True:
+			minStatuses = ""
+		if default_set['maxStatuses'] == True:
+			maxStatuses = ""
+		error_msg = "WHOOPS! That can't be right ... Please check your filter ranges."
 		links = getProfileLinks(origData[0])
-		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, error_msg=error_msg)
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses, error_msg=error_msg)
 
 	all_results = origData[0]
-	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers)
+	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers, minStatuses, maxStatuses)
 
 	links = getProfileLinks(filtered_influencers)
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers)
+	# hide default values from user
+	if default_set['minFollowers'] == True:
+		minFollowers = ""
+	if default_set['maxFollowers'] == True:
+		maxFollowers = ""
+	if default_set['minStatuses'] == True:
+		minStatuses = ""
+	if default_set['maxStatuses'] == True:
+		maxStatuses = ""
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses)
 
 
 @app.route('/influencers/<path:category>', methods=['GET'])

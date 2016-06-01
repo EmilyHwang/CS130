@@ -18,7 +18,7 @@
             background-color: #464553;
         }*/
         .follow-btn {
-            width: 81px;   
+            width: 81px;
             -webkit-border-radius: 5;
             -moz-border-radius: 5;
             border-radius: 5px;
@@ -69,14 +69,22 @@
         <form action="/filtered_results" method="post">
             <div class="form-group">
                 <strong>Filter By: </strong><br>
-                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
-                    <label>Min Follower Count</label>
+                <div class="input-group col-lg-2 col-md-2 col-sm-2 col-xs-4">
+                    <label>Min # of Followers</label>
                     <input type="text" class="form-control" name="minFollowers" value="{{ minFollowers }}">
-                </div>
-                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
-                    <label>Max Follower Count</label>
+                </div>&nbsp;
+                <div class="input-group col-lg-2 col-md-2 col-sm-2 col-xs-4">
+                    <label>Max # of Followers</label>
                     <input type="text" class="form-control" name="maxFollowers" value="{{ maxFollowers }}">
-                </div>
+                </div>&nbsp;
+                <div class="input-group col-lg-2 col-md-2 col-sm-2 col-xs-4">
+                    <label>Min # of Statuses</label>
+                    <input type="text" class="form-control" name="minStatuses" value="{{ minStatuses }}">
+                </div>&nbsp;
+                <div class="input-group col-lg-2 col-md-2 col-sm-2 col-xs-4">
+                    <label>Max # of Statuses</label>
+                    <input type="text" class="form-control" name="maxStatuses" value="{{ maxStatuses }}">
+                </div>&nbsp;
                 <input type="submit" value="Apply">
             </div>
         </form>
@@ -125,7 +133,6 @@
                     {% endfor %}
                     </tbody>
                 </table>
-                <!-- TODO: disable left/right at begin/end of results -->
                 <form action="/search/results" method="post">
                     <!-- Go to Previous Page -->
                     <button type="submit" value = "previous" name="page" class="btn btn-default btn-sm" {{ left_btn_view }}>
