@@ -5,6 +5,7 @@ import math
 import json
 import string
 import re
+import time
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -59,7 +60,7 @@ pmax = 0					# max page
 # const globals
 RESULTS_PER_PAGE = 10		# num results to display per page; must correspond w/ num results returned from back end
 FILTERS_ENABLED = ""		# show filters when all results are available
-FILTERS_DISABLED = "hidden"	# hide filters when paginating
+FILTERS_DISABLED = "hidden" # hide filters when paginating
 BTN_ENABLED = ""			# used for pagination
 BTN_DISABLED = "disabled='disabled'" # used for pagination
 
@@ -180,9 +181,18 @@ def search():
 		logfile.info("Search initiated for hashtag: #%s" % query)
 
 		search = Search(query, auth)
-
+		
 		# Get a list of users back
+		start = time.time()
+		logfile.info("time started: " + str(start))
 		influencers = search.search_users()
+		
+		end = time.time()
+		logfile.info("time started: " + str(start))
+		logfile.info("Searching for: " + query)
+		logfile.info("time ended: " + str(end))
+		logfile.info("time elapsed: " + str(end-start))
+
 		potential_influencers = influencers['first_pull']
 		leftover_influencers = influencers['leftover']
 
