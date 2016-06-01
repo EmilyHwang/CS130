@@ -405,7 +405,7 @@ def follow():
 			interaction.follow_user(user_to_follow)
 		else:
 			interaction.unfollow_user(user_to_follow)
-	
+
 	potential_influencers = origData[currPage]
 	potential_influencers[user_to_follow]['followStatus'] = not potential_influencers[user_to_follow]['followStatus'] 
 
