@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
-from flask_oauth import OAuth
+from flask_oauth import OAuth, OAuthException
 from tweepy import OAuthHandler, API
 import math
 
@@ -17,6 +17,8 @@ from instagram.instagram_search import InstagramSearch
 import logging, logging.config, yaml
 
 import urllib, urlparse
+import requests
+import json
 
 # Configurations
 DEBUG = False
@@ -25,7 +27,8 @@ SECRET_KEY = 'SUPER SECRET CIA_FBI_NSA DEVELOPMENT KEY'
 USER_NAME = ''
 PASSWORD = ''
 
-REDIRECT_URI = "http://127.0.0.1:5000/authorized"
+REDIRECT_URI = "http://127.0.0.1:5000/instagram_authorized"
+ACCESS_REDIRECT_URI = "http://127.0.0.1:5000/instagram_access"
 
 # Create Flask application
 app = Flask(__name__)
@@ -46,11 +49,11 @@ twitter_oauth = oauth.remote_app('twitter',
 								 consumer_secret=twitter_auth.CONSUMER_SECRET
 								 )
 
-instagram_oauth = oauth.remote_app('instagram',
+instagram_oauth = oauth.remote_app('Instagram',
 								 base_url='https://api.instagram.com',
 								 authorize_url='https://api.instagram.com/oauth/authorize',
 								 request_token_url=None,
-								 request_token_params = {'response_type': 'token', 'scope':'public_content'},
+								 request_token_params = {'response_type': 'code', 'scope':'public_content'},
 								 access_token_url='https://api.instagram.com/oauth/access_token',
 								 access_token_method='POST',
 								 access_token_params = {},
@@ -120,33 +123,35 @@ def search():
 	twitter_token = session.get('twitter_token')
 	instagram_token = session.get('instagram_access_token')
 	if twitter_token is None:
-		logfile.info("User is not logged in. Redirect")
+		logfile.info("User is not logged in to Twitter. Redirect")
 		logconsole.info("User is not logged in. Redirect")
 		session.clear()
 		session['query'] = request.form['user-input']
 		return redirect(url_for('login_twitter'))
 	
 	if instagram_token is None:
-		session.clear()
+		logfile.info("User is not logged in to Instagram. Redirect")
+		if session.has_key('instagram_access_token'):
+			del session['instagram_access_token']
 		session['query'] = request.form['user-input']
 		return redirect(url_for('login_instagram'))
 		
-	logfile.info("instagram token: " + instagram_token)
 
 	if request.method == 'POST':
-		access_token = twitter_token[0]
+		twitter_access_token = twitter_token[0]
 		access_token_secret = twitter_token[1]
-		auth = twitter_auth.UserAuth(access_token, access_token_secret)
+		auth = twitter_auth.UserAuth(twitter_access_token, access_token_secret)
 
 		global query
 		global search
 		query = request.form['user-input']
 		logfile.info("Search initiated for hashtag: #%s" % query)
+		
+		# Search instagram
+		inst_search = InstagramSearch(instagram_token, query)
+		instagram_influencers = inst_search.search_instagram()
 
 		search = Search(query, auth)
-		
-		search_instagram = InstagramSearch(instagram_token, query)
-		search_instagram.search_instagram()
 
 		# Get a list of users back
 		influencers = search.search_users()
@@ -180,7 +185,7 @@ def search():
 			# enable filters if all results are returned (i.e. no pagination needed)
 			filters_view = FILTERS_ENABLED
 
-		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+		return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, instagram_influencers=instagram_influencers)
 	else:
 		return redirect('/search-page')
 
@@ -294,27 +299,51 @@ def login_twitter():
 def login_instagram():
 	if session.has_key('instagram_access_token'):
 		del session['instagram_access_token']
-	return instagram_oauth.authorize(callback=REDIRECT_URI)
+	callback = url_for(
+		'instagram_authorized',
+		next=request.args.get('next') or request.referrer or None,
+		_external=True
+	)
+	return instagram_oauth.authorize(callback=callback)
 
 @app.route('/logout')
 def logout():
 	session.clear()
 	return redirect('/index')
 	
-@app.route('/authorized')
-@instagram_oauth.authorized_handler
-def authorized(resp):
-	try:
-		pass
-	except Exception:
-		pass
-	session.clear()
-	print request
-	print resp
-	access_token = request.args.get('access_token')
+@app.route('/instagram_authorized')
+#@instagram_oauth.authorized_handler
+def instagram_authorized():
+	next_url = request.args.get('next') or url_for('index')
+	if request.args.get('error'):
+		flash(u'Access denied')
+		return redirect(next_url)
+	
+	code = request.args.get('code')
+	print code
+	headers = {'Content-type': 'application/x-www-form-urlencoded'}
+	callback = url_for(
+		'instagram_authorized',
+		next=request.args.get('next') or request.referrer or None,
+		_external=True
+	)
+	d = {'client_id': CLIENT_ID, 'client_secret':CLIENT_SECRET, 'grant_type':'authorization_code','redirect_uri': callback, 'code': code}
+	resp = requests.post("https://api.instagram.com/oauth/access_token", data=d, headers=headers)
+	resp_json = resp.json()
+	access_token = resp_json['access_token']
 	session['instagram_access_token'] = access_token
-	logfile.info("authorized instagram with access_token: " + access_token)
-	return redirect('/index')
+	session['instagram_screen_name'] = resp_json['user']['username']
+	
+	global query
+	query = session.get('query')
+	if query is None:
+		return redirect(url_for('index'))
+	
+	form_data = request.form
+	form_data = {'user-input': query}
+	return redirect('/search', code=307)
+
+
 
 @app.route('/oauth-authorized')
 @twitter_oauth.authorized_handler
@@ -342,6 +371,17 @@ def oauth_authorized(response):
 	query = session.get('query')
 	if query is None:
 		return redirect(url_for('index'))
+		
+	if instagram_token is None:
+		logfile.info("User is not logged in to Instagram. Redirect")
+		if session.has_key('instagram_access_token'):
+			del session['instagram_access_token']		
+		session['query'] = request.form['user-input']
+		return redirect(url_for('login_instagram'))
+		
+	# Search instagram
+	inst_search = InstagramSearch(instagram_token, query)
+	instagram_influencers = inst_search.search_instagram()
 
 	search = Search(query, auth)
 
@@ -372,7 +412,7 @@ def oauth_authorized(response):
 		right_btn_view = BTN_DISABLED
 		filters_view = FILTERS_ENABLED
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, instagram_influencers=instagram_influencers)
 
 
 @app.route('/about')

@@ -48,7 +48,7 @@ class InstagramSearch:
 	def search_instagram(self):
 		print "SEARCHING INSTAGRAM"
 		# go search instagram
-		json_response = self.api_tag_recent_media(self.hashtag)
+		json_response = self.api_tag_recent_media()
 		pagination = json_response['pagination']
 		data = json_response['data']
 		influencers = {}
@@ -58,7 +58,7 @@ class InstagramSearch:
 			user_info = self.api_users_user_id(user_id)['data']
 			username = user_info['username']
 			user_dict = {'followers': user_info['counts']['followed_by'], 'numTweets': user_info['counts']['media']}
-			user_dict.update(get_user_info(user_id))
+			user_dict.update(self.get_user_info(user_id))
 			influencers[username] = user_dict
 		
 		print influencers

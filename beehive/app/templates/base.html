@@ -69,7 +69,12 @@
                     {% if session['twitter_screen_name'] is defined %}
                         <span> <span style="color:#ebd467;">{{ session['twitter_screen_name'] }}</span> <small>&nbsp;&nbsp;&nbsp;<a style="color:white;" href="/logout">Logout</a></small></span>
                     {% else %}
-                        <span><a style="color:white;" href="/login_instagram"> Login </a></span>
+                        <span><a style="color:white;" href="/login_twitter"> Login Twitter      </a></span>
+                    {% endif %}
+					{% if session['instagram_screen_name'] is defined %}
+                        <span> <span style="color:#ebd467;">{{ session['instagram_screen_name'] }}</span> <small>&nbsp;&nbsp;&nbsp;<a style="color:white;" href="/logout">Logout</a></small></span>
+                    {% else %}
+                        <span><a style="color:white;" href="/login_instagram"> Login Instagram</a></span>
                     {% endif %}
                     </a>
                 </li>

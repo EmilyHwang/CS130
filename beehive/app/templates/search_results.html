@@ -106,6 +106,23 @@
 							{% set i = i + 1 %}
                         </tr>
                     {% endfor %}
+					{% for influencer, influencer_info in instagram_influencers.iteritems() %}
+                        <tr>
+                            <td class="td-influencer text-center"><a href="{{ links[i] }}">{{ influencer }}</a></td>
+							<td class="text-center">{{ influencer_info['followers'] }}</td>
+							<td class="text-center">{{ influencer_info['numTweets'] }}</td>
+							<td class="text-center">{{ influencer_info['avgLikes'] }}</td>
+							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
+							<td class="text-center">{{influencer_info['userRank'] }}</td>
+                            <td>
+							<form action="/follow" method="post">
+								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
+								<button class="btn follow-btn" type="submit">Follow</button>
+							</form>
+                            </td>
+							{% set i = i + 1 %}
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
                 <!-- TODO: disable left/right at begin/end of results -->
