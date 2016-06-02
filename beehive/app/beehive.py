@@ -39,8 +39,8 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.secret_key = SECRET_KEY
 
-CLIENT_ID = "88c6f49c38f540fa8fa70521b35c50d3"
-CLIENT_SECRET = "1f888dc7f45c4c5fb5823052807ed9fe"
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
 
 # For user-level authentication
 oauth = OAuth()
@@ -537,11 +537,11 @@ def oauth_authorized(response):
 	instagram_influencers = inst_search.search_instagram()
 
 	# check if hashtag is valid before querying
-		if notValidHashtag(query):
-			logfile.info("User searched invalid hashtag: #%s" % query)
-			error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
-			return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
-		logfile.info("Search initiated for hashtag: #%s" % query)
+	if notValidHashtag(query):
+		logfile.info("User searched invalid hashtag: #%s" % query)
+		error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
+		return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
+	logfile.info("Search initiated for hashtag: #%s" % query)
 
 	search = Search(query, auth)
 

@@ -165,18 +165,61 @@
 							{% set i = i + 1 %}
                         </tr>
                     {% endfor %}
-					{% for influencer, influencer_info in instagram_influencers.iteritems() %}
+                    </tbody>
+                </table>
+                <form action="/search/results" method="post">
+                    <!-- Go to Previous Page -->
+                    <button type="submit" value = "previous" name="page" class="btn btn-default btn-sm" {{ left_btn_view }}>
+                        <span class="glyphicon glyphicon-arrow-left"></span>
+                    </button>
+                    <!-- Got to Next Page -->
+                    <button type="submit" value="next" name="page" class="btn btn-default btn-sm" {{ right_btn_view }}>
+                        <span class="glyphicon glyphicon-arrow-right"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <p class="lead">
+                Bummer. No results found.
+            </p>
+        </div>
+    {% endif %}
+	
+	 <!-- (2) Display Results -->
+    {% if instagram_influencers is defined %}
+        <div class="row table-responsive">
+            <div class="col-lg-12">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Screen Name</th>
+                            <th class="text-center"># of Followers</th>
+                            <th class="text-center"># of Statuses</th>
+                            <th class="text-center">Avg # of Favorites</th>
+                            <th class="text-center">Influencer Ranking</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                    {% set i = 0 %}
+                    {% for influencer, influencer_info in instagram_influencers.iteritems() %}
                         <tr>
                             <td class="td-influencer text-center"><a href="{{ links[i] }}">{{ influencer }}</a></td>
 							<td class="text-center">{{ influencer_info['followers'] }}</td>
 							<td class="text-center">{{ influencer_info['numTweets'] }}</td>
 							<td class="text-center">{{ influencer_info['avgLikes'] }}</td>
-							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
-							<td class="text-center">{{influencer_info['userRank'] }}</td>
+							<td class="text-center">{{ influencer_info['userRank'] }}</td>
                             <td>
-							<form action="/follow" method="post">
+							<form action="/follow" method="post" class="results">
 								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
-								<button class="btn follow-btn" type="submit">Follow</button>
+                                <input type="hidden" value="{{ influencer_info['followStatus'] }}" name="followStatus">
+                                {% if not influencer_info['followStatus'] %}
+								    <button class="btn follow-btn" type="submit">Follow</button>
+                                {% else %}
+                                    <button class="btn unfollow-btn" type="submit">Unfollow</button>
+                                {% endif %}
 							</form>
                             </td>
 							{% set i = i + 1 %}
