@@ -482,12 +482,6 @@ def oauth_authorized(response):
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
 
-@app.route('/about')
-def about():
-	data = {}
-	return render_template('about.html', data=data)
-
-
 @app.route('/follow', methods=['POST'])
 def follow():
 	twitter_token = session.get('twitter_token')
