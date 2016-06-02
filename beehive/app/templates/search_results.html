@@ -3,6 +3,33 @@
 {% block styles %}
     {# Custom CSS styles for search_results.html #}
     <style>
+        @media (min-width: 768px) {
+            .filter-label-top {
+                position:relative;
+                top: 54px;
+                left: 30px;
+            }
+            .filter-btn {
+                position: relative;
+                float: right;
+                top: 28px;
+                left: -83px;
+            }
+        }
+        .filter-label-top {
+            color: #ebd467;
+            font-size: 18px;
+        }
+
+        .filter-btn {
+        }
+
+        .filter-label {
+            color: #ebd467;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
         th {
             color: #ebd467;
             font-size: 18px;
@@ -18,8 +45,18 @@
             background-color: #464553;
         }
         .follow-btn {
-            background-color: #ebd467;
-            color: #2c2e38;
+            width: 81px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            color: #ffffff;
+            background: #EBD467;
+            text-decoration: none;
+        }
+
+        .follow-btn:hover {
+          background: #CAB13F;
+          text-decoration: none;
         }
     </style>
 {% endblock styles %}
@@ -53,19 +90,36 @@
 
     <br>
     <!-- (1) Display Filtering Options If Available -->
+    <!-- TODO: error-msg class is getting overridden somewhere ... -->
+    <span class="error-msg"> {{error_msg}} </span>
+
     <div class="text-left form-inline {{ filters_view }}">
+        <div class="row">
+            <div class="col-sm-offset-1 col-xs-offset-5">
+                <span class="filter-label-top">Filter<br>By: </span><br>
+            </div>
+        </div>
         <form action="/filtered_results" method="post">
-            <div class="form-group">
-                <strong>Filter By: </strong><br>
-                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
-                    <label>Min Follower Count</label>
-                    <input type="text" class="form-control" name="minFollowers">
+            <div class="row form-group">
+                <div class="input-group col-sm-offset-2 col-sm-2 col-xs-offset-4 col-xs-4">
+                    <label class="filter-label">Min # of Followers</label>
+                    <input type="text" class="form-control" name="minFollowers" value="{{ minFollowers }}">
+                </div>&nbsp;
+                <div class="input-group col-sm-offset-0 col-sm-2 col-xs-offset-4 col-xs-4">
+                    <label class="filter-label">Max # of Followers</label>
+                    <input type="text" class="form-control" name="maxFollowers" value="{{ maxFollowers }}">
+                </div>&nbsp;
+                <div class="input-group col-sm-offset-0 col-sm-2 col-xs-offset-4 col-xs-4">
+                    <label class="filter-label">Min # of Statuses</label>
+                    <input type="text" class="form-control" name="minStatuses" value="{{ minStatuses }}">
+                </div>&nbsp;
+                <div class="input-group col-sm-offset-0 col-sm-2 col-xs-offset-4 col-xs-4">
+                    <label class="filter-label">Max # of Statuses</label>
+                    <input type="text" class="form-control" name="maxStatuses" value="{{ maxStatuses }}">
+                </div>&nbsp;
+                <div class="col-sm-1 filter-btn">
+                    <input class="follow-btn" type="submit" value="Apply">
                 </div>
-                <div class="input-group col-lg-3 col-md-3 col-sm-3 col-xs-4">
-                    <label>Max Follower Count</label>
-                    <input type="text" class="form-control" name="maxFollowers">
-                </div>
-                <input type="submit" value="Apply">
             </div>
         </form>
     </div>
@@ -96,11 +150,16 @@
 							<td class="text-center">{{ influencer_info['numTweets'] }}</td>
 							<td class="text-center">{{ influencer_info['avgLikes'] }}</td>
 							<td class="text-center">{{ influencer_info['avgRetweets'] }}</td>
-							<td class="text-center">{{influencer_info['userRank'] }}</td>
+							<td class="text-center">{{ influencer_info['userRank'] }}</td>
                             <td>
-							<form action="/follow" method="post">
+							<form action="/follow" method="post" class="results">
 								<input type="hidden" value="{{ influencer }}" name="user-to-follow">
-								<button class="btn follow-btn" type="submit">Follow</button>
+                                <input type="hidden" value="{{ influencer_info['followStatus'] }}" name="followStatus">
+                                {% if not influencer_info['followStatus'] %}
+								    <button class="btn follow-btn" type="submit">Follow</button>
+                                {% else %}
+                                    <button class="btn unfollow-btn" type="submit">Unfollow</button>
+                                {% endif %}
 							</form>
                             </td>
 							{% set i = i + 1 %}
@@ -125,7 +184,6 @@
                     {% endfor %}
                     </tbody>
                 </table>
-                <!-- TODO: disable left/right at begin/end of results -->
                 <form action="/search/results" method="post">
                     <!-- Go to Previous Page -->
                     <button type="submit" value = "previous" name="page" class="btn btn-default btn-sm" {{ left_btn_view }}>

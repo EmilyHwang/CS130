@@ -39,8 +39,8 @@ class UserRank:
 		return (curr_user.followers - last_user.followers)/last_user.followers
 
 	def calculate_user_rank(self, avglikes, avgretweets, followers, numtweets, followers_growth, numinteractions):
-		return .2*avglikes + .2*avgretweets + .05*followers + .03*numtweets + .202*followers_growth + .3*numinteractions
-
+		return .5*avglikes + .5*avgretweets + .1*followers + .001*numtweets + .6*followers_growth + .6*numinteractions
+		
 	def update_users_rank(self):
 		logfile.info("====== Update User Ranking ======")
 

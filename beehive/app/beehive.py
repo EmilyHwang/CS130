@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from flask_oauth import OAuth, OAuthException
 from tweepy import OAuthHandler, API
 import math
+import json
+import re
+import time
+import sys
 
 import pdb
 import twitter.rand_influencers as rand_influencers
@@ -73,7 +77,7 @@ def get_instagram_token(token=None):
 
 # Global variables for filtering and pagination
 query = ''					# query term
-origData = []				# a copy of the original data, in case user wants to change filter params
+origData = []				# a copy of the original data where each entry is a 'page' of results, in case user wants to change filter params
 leftoverData = {}			# users who we have not collected all info on yet
 search = None				# search object so we can fetch next page of results
 currPage = 0				# current page of results to display (starts at page 0)
@@ -82,16 +86,78 @@ pmax = 0					# max page
 # const globals
 RESULTS_PER_PAGE = 10		# num results to display per page; must correspond w/ num results returned from back end
 FILTERS_ENABLED = ""		# show filters when all results are available
-FILTERS_DISABLED = "hidden"	# hide filters when paginating
+FILTERS_DISABLED = "hidden" # hide filters when paginating
 BTN_ENABLED = ""			# used for pagination
 BTN_DISABLED = "disabled='disabled'" # used for pagination
 
-# Helper functions used across multiple routes
+# Helper Functions
+
+# not suitable for use with random_influencers
 def getProfileLinks(potential_influencers):
+
 	links = []
+	print potential_influencers
 	for name in potential_influencers:
 		links.append('https://twitter.com/' + name)
 	return links
+
+
+# Insert clickable links into Twitter tweet text
+# tweet = user['status']['text']
+# entities = user['status']['entities']
+def insertTextLinks(tweet, entities):
+	# make mentions clickable
+	if 'user_mentions' in entities:
+		if len(entities['user_mentions']) != 0:
+			for user in entities['user_mentions']:
+				profile_link = "<a href=" + "'https://twitter.com/" + user['screen_name'] + "'>@" + user['screen_name'] + "</a>"
+				screen_name = '@' + user['screen_name']
+				tweet = re.sub(screen_name, profile_link, tweet, flags=re.IGNORECASE)
+
+	# make hashtags clickable
+	if 'hashtags' in entities:
+		if len(entities['hashtags']) != 0:
+			for hashtag in entities['hashtags']:
+				tag_link = "<a href=" + "'https://twitter.com/hashtag/" + hashtag['text'] + "'>#" + hashtag['text'] + "</a>"
+				tag = '#' + hashtag['text']
+				tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
+
+	# make URLs clickable
+	if 'urls' in entities:
+		if len(entities['urls']) != 0:
+			for url in entities['urls']:
+				url_link = "<a href=" + url['expanded_url'] + "'>" + url['display_url'] + "</a>"
+				tco_url = url['url']
+				tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
+
+	# embed images
+	if 'media' in entities:
+		if len(entities['media']) != 0:
+			for m in entities['media']:
+				url_link = "<img src='" + m['media_url'] + ":small'>"
+				tco_url = m['url']
+				tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
+
+	# make cashtags (stock symbols) clickable
+	if 'symbols' in entities:
+		if len(entities['symbols']) != 0:
+			for cashtag in entities['symbols']:
+				tag_link = "<a href=" + "'https://twitter.com/search?q=%24" + cashtag['text'] + "&src=ctag'>$" + cashtag['text'] + "</a>"
+				tag = '\$' + cashtag['text']
+				tweet = re.sub(tag, tag_link, tweet, flags=re.IGNORECASE)
+
+	return tweet
+
+# basically only checking for SQL injection right now
+# does not check for well-formulated hashtag (e.g. does not start w/ number ...)
+def notValidHashtag(query):
+	# no spaces or punctuation
+	regex = r"^[^\s\t\-;!%=(){}&|@<>\$\^\*\+\.\?\\]+$"
+	# hashtag is valid
+	if re.search(regex, query):
+		return False
+	# hashtag not valid
+	return True
 
 
 # View Routing
@@ -104,15 +170,19 @@ def index():
 	#data = {}
 	logfile.info('==== Landing Page ====')
 	logfile.info('Get all categories')
-	cats = categories.getAllCategories();
+	cats = categories.getAllCategories()
 
 	logfile.info('Get random influencers from subcategory')
-	# get 3 random users
-	users = rand_influencers.get_users(3)
+	# get 6 random users
+	users = rand_influencers.get_users(6)
 
 	links = []
 	for user in users:
 		links.append('https://twitter.com/' + user['screen_name'])
+
+	# make links in tweet clickable
+	for user in users:
+		user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
 
 	return render_template('index.html', users=users, links=links, categories=cats)
 
@@ -145,6 +215,11 @@ def search():
 		global query
 		global search
 		query = request.form['user-input']
+		# check if hashtag is valid before querying
+		if notValidHashtag(query):
+			logfile.info("User searched invalid hashtag: #%s" % query)
+			error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
+			return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
 		logfile.info("Search initiated for hashtag: #%s" % query)
 		
 		# Search instagram
@@ -154,7 +229,16 @@ def search():
 		search = Search(query, auth)
 
 		# Get a list of users back
+		start = time.time()
+		logfile.info("time started: " + str(start))
 		influencers = search.search_users()
+
+		end = time.time()
+		logfile.info("time started: " + str(start))
+		logfile.info("Searching for: " + query)
+		logfile.info("time ended: " + str(end))
+		logfile.info("time elapsed: " + str(end-start))
+
 		potential_influencers = influencers['first_pull']
 		leftover_influencers = influencers['leftover']
 
@@ -164,12 +248,13 @@ def search():
 
 		global leftoverData
 		leftoverData = leftover_influencers
-		print "length of leftoverData: "
-		print len(leftoverData)
+		logfile.info("Number of results left: %d" % len(leftoverData))
 
 		global pmax
 		num_results = len(potential_influencers) + len(leftover_influencers)
-		pmax = math.ceil(num_results/RESULTS_PER_PAGE) - 1
+		logfile.info("Total number of results: %d" % num_results)
+		# cast to float to prevent rounding before ceil() is called
+		pmax = math.ceil(num_results/float(RESULTS_PER_PAGE)) - 1
 
 		links = getProfileLinks(potential_influencers)
 
@@ -193,8 +278,6 @@ def search():
 @app.route('/search/results', methods=['POST'])
 def paginate():
 	request_page = request.form['page']
-	print request_page
-	print pmax
 	global currPage
 	global origData
 	global leftoverData
@@ -243,15 +326,16 @@ def paginate():
 				# add new page of influencers to origData
 				origData.append(potential_influencers)
 				leftoverData = leftover_influencers
-				print len(leftoverData)
+				logfile.info("New number of results left: %d" % len(leftoverData))
 
 				links = getProfileLinks(potential_influencers)
 
 				return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
 
-	# TODO
-	# redirect to error page
-	return redirect('/index')
+	# redirect to home and display error b/c we should never get here
+	error_msg = "WHOOPS! Well that wasn't supposed to happen. Please try again."
+	return redirect('/index', error_msg=error_msg)
+
 
 @app.route('/search-page')
 def search_page():
@@ -264,31 +348,100 @@ def applyFilters():
 	logfile.info("original data")
 	logfile.info(origData)
 
-	minFollowers = request.form['minFollowers']
-	maxFollowers = request.form['maxFollowers']
-
-
-	filtered_influencers = filter_influencers.applyFilters(origData, minFollowers, maxFollowers)
-
-	links = getProfileLinks(filtered_influencers)
-
 	left_btn_view = BTN_DISABLED
 	right_btn_view = BTN_DISABLED
 	filters_view = FILTERS_ENABLED
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	minFollowers = request.form['minFollowers']
+	maxFollowers = request.form['maxFollowers']
+	minStatuses = request.form['minStatuses']
+	maxStatuses = request.form['maxStatuses']
+
+	# set defaults for filter computation if no input provided
+	default_set = {'minFollowers': False, 'maxFollowers': False, 'minStatuses': False, 'maxStatuses': False}
+	if len(minFollowers) == 0:
+		minFollowers = 0
+		default_set['minFollowers'] = True
+	if len(maxFollowers) == 0:
+		maxFollowers = sys.maxint
+		default_set['maxFollowers'] = True
+	if len(minStatuses) == 0:
+		minStatuses = 0;
+		default_set['minStatuses'] = True
+	if len(maxStatuses) == 0:
+		maxStatuses = sys.maxint
+		default_set['maxStatuses'] = True
+
+	# validate user input
+	try:
+		minFollowers = int(minFollowers)
+		maxFollowers = int(maxFollowers)
+		minStatuses = int(minStatuses)
+		maxStatuses = int(maxStatuses)
+
+	except ValueError:
+		error_msg = "WHOOPS! That can't be right ... Please check your filter range."
+		links = getProfileLinks(origData[0])
+		# hide default values from user
+		if default_set['minFollowers'] == True:
+			minFollowers = ""
+		if default_set['maxFollowers'] == True:
+			maxFollowers = ""
+		if default_set['minStatuses'] == True:
+			minStatuses = ""
+		if default_set['maxStatuses'] == True:
+			maxStatuses = ""
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses, error_msg=error_msg)
+
+	if minFollowers < 0 or maxFollowers < 0 or maxFollowers < minFollowers or minStatuses < 0 or maxStatuses < 0 or maxStatuses < minStatuses:
+		# hide default values from user
+		if default_set['minFollowers'] == True:
+			minFollowers = ""
+		if default_set['maxFollowers'] == True:
+			maxFollowers = ""
+		if default_set['minStatuses'] == True:
+			minStatuses = ""
+		if default_set['maxStatuses'] == True:
+			maxStatuses = ""
+		error_msg = "WHOOPS! That can't be right ... Please check your filter ranges."
+		links = getProfileLinks(origData[0])
+		return render_template('search_results.html', query=query, links=links, potential_influencers=origData[0], left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses, error_msg=error_msg)
+
+	all_results = origData[0]
+	filtered_influencers = filter_influencers.applyFilters(all_results, minFollowers, maxFollowers, minStatuses, maxStatuses)
+
+	links = getProfileLinks(filtered_influencers)
+
+	# hide default values from user
+	if default_set['minFollowers'] == True:
+		minFollowers = ""
+	if default_set['maxFollowers'] == True:
+		maxFollowers = ""
+	if default_set['minStatuses'] == True:
+		minStatuses = ""
+	if default_set['maxStatuses'] == True:
+		maxStatuses = ""
+
+	return render_template('search_results.html', query=query, links=links, potential_influencers=filtered_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, minFollowers=minFollowers, maxFollowers=maxFollowers, minStatuses=minStatuses, maxStatuses=maxStatuses)
 
 
 @app.route('/influencers/<path:category>', methods=['GET'])
 def getInfluencersByCategory(category):
 	cats = categories.getAllCategories()
+	view_category = ": " + category
 
 	# get 12 users to display
 	users = rand_influencers.get_users_by_category(12, category)
 
-	links = getProfileLinks(users)
+	links = []
+	for user in users:
+		links.append('https://twitter.com/' + user['screen_name'])
 
-	return render_template('index.html', users=users, links=links, categories=cats)
+	# make links in tweet clickable
+	for user in users:
+		user['status']['text'] = insertTextLinks(user['status']['text'], user['status']['entities'])
+
+	return render_template('index.html', users=users, links=links, categories=cats, view_category=view_category)
 
 
 @app.route('/login_twitter')
@@ -383,6 +536,13 @@ def oauth_authorized(response):
 	inst_search = InstagramSearch(instagram_token, query)
 	instagram_influencers = inst_search.search_instagram()
 
+	# check if hashtag is valid before querying
+		if notValidHashtag(query):
+			logfile.info("User searched invalid hashtag: #%s" % query)
+			error_msg = "WHOOPS! That doesn't look like a valid hashtag ... Please check your input so we can give you some awesome results!"
+			return render_template('search_results.html', query=query, links=[], potential_influencers={}, left_btn_view=BTN_DISABLED, right_btn_view=BTN_DISABLED, filters_view=FILTERS_DISABLED, error_msg = error_msg)
+		logfile.info("Search initiated for hashtag: #%s" % query)
+
 	search = Search(query, auth)
 
 	# Get a list of users back
@@ -415,12 +575,6 @@ def oauth_authorized(response):
 	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view, instagram_influencers=instagram_influencers)
 
 
-@app.route('/about')
-def about():
-	data = {}
-	return render_template('about.html', data=data)
-
-
 @app.route('/follow', methods=['POST'])
 def follow():
 	twitter_token = session.get('twitter_token')
@@ -430,8 +584,13 @@ def follow():
 		access_token_secret = twitter_token[1]
 		auth = twitter_auth.UserAuth(access_token, access_token_secret)
 		interaction = Interact(query, auth)
-		interaction.follow_user(user_to_follow)
+		if request.form['followStatus'] == 'False':
+			interaction.follow_user(user_to_follow)
+		else:
+			interaction.unfollow_user(user_to_follow)
+
 	potential_influencers = origData[currPage]
+	potential_influencers[user_to_follow]['followStatus'] = not potential_influencers[user_to_follow]['followStatus']
 
 	links = getProfileLinks(potential_influencers)
 
@@ -449,7 +608,18 @@ def follow():
 	if pmax == 0:
 		filters_view = FILTERS_ENABLED
 
-	return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+	return json.dumps({'status': 'ok'})
+	# return render_template('search_results.html', query=query, links=links, potential_influencers=potential_influencers, left_btn_view=left_btn_view, right_btn_view=right_btn_view, filters_view=filters_view)
+
+
+# Error handling
+@app.errorhandler(404)
+def page_not_found(e):
+	return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def page_not_found(e):
+	return render_template('500.html'), 500
 
 
 if __name__ == '__main__':
