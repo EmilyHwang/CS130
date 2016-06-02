@@ -1,7 +1,4 @@
 #!/bin/python
-
-#otterpup94
-#access_token = "3275043577.88c6f49.ab2bbffc632948eebab73ca5b0b52569"
 		
 import urllib, json
 from collections import Counter
