@@ -108,7 +108,7 @@ def insertTextLinks(tweet, entities):
 	if 'media' in entities:
 		if len(entities['media']) != 0:
 			for m in entities['media']:
-				url_link = "<img src='" + m['media_url'] + ":small'>"
+				url_link = "<img class='img-responsive' src='" + m['media_url'] + ":small'>"
 				tco_url = m['url']
 				tweet = re.sub(tco_url, url_link, tweet, flags=re.IGNORECASE)
 
