@@ -204,14 +204,19 @@ def search():
 		leftover_influencers = influencers['leftover']
 
 		# store variables for pagination
+		global currPage
+		currPage = 0
 		global origData
+		origData = []
 		origData.append(potential_influencers)
 
 		global leftoverData
+		leftoverData = {}
 		leftoverData = leftover_influencers
 		logfile.info("Number of results left: %d" % len(leftoverData))
 
 		global pmax
+		pmax = 0
 		num_results = len(potential_influencers) + len(leftover_influencers)
 		logfile.info("Total number of results: %d" % num_results)
 		# cast to float to prevent rounding before ceil() is called
@@ -242,6 +247,7 @@ def paginate():
 	global currPage
 	global origData
 	global leftoverData
+	global pmax
 
 	# prohibit filter options b/c not all results available
 	filters_view = FILTERS_DISABLED
