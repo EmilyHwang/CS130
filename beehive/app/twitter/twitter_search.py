@@ -94,23 +94,27 @@ class Search:
 
 		status = None
 		logfile.info("Calculating ...")
-		for status in data:
-			logfile.info("calculating status id %s" % status.id)
-			total_num_tweets = total_num_tweets + 1
-			favorite_count_sum = status.favorite_count + favorite_count_sum
-			retweet_count_sum = status.retweet_count + retweet_count_sum
 
-		if status is None:
+		try:
+			for status in data:
+				logfile.info("calculating status id %s" % status.id)
+				total_num_tweets = total_num_tweets + 1
+				favorite_count_sum = status.favorite_count + favorite_count_sum
+				retweet_count_sum = status.retweet_count + retweet_count_sum
+
+			if status is None:
+				return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
+
+			else:
+				followers_count = status.user.followers_count
+				statuses_count = status.user.statuses_count
+				avg_favorite_count = favorite_count_sum/total_num_tweets
+				avg_retweet_count = retweet_count_sum/total_num_tweets
+
+				return {'fullname': status.user.name, 'followers': status.user.followers_count, 'numTweets': status.user.statuses_count, 'avgLikes': favorite_count_sum/total_num_tweets, 'avgRetweets': retweet_count_sum/total_num_tweets}
+		except: 
+			logfile.error("Unable to parse user %s" % user)
 			return {'followers': 0, 'numTweets': 0, 'avgLikes': 0, 'avgRetweets': 0}
-
-		else:
-			followers_count = status.user.followers_count
-			statuses_count = status.user.statuses_count
-			avg_favorite_count = favorite_count_sum/total_num_tweets
-			avg_retweet_count = retweet_count_sum/total_num_tweets
-
-			return {'fullname': status.user.name, 'followers': status.user.followers_count, 'numTweets': status.user.statuses_count, 'avgLikes': favorite_count_sum/total_num_tweets, 'avgRetweets': retweet_count_sum/total_num_tweets}
-
 
 	def update_cassandra(self, potential_influencers):
 		logfile.info("========= Updating Cassandra ===========")
@@ -169,11 +173,14 @@ class Search:
 			for user in users:
 				user_info = self.query_user_timeline(user)
 
-				if user_info is not None:
+				if user_info['followers'] != 0:
 					all_info = users[user].copy()
 					all_info.update(user_info)
 					potential_influencers[user] = all_info
-					potential_influencers[user]['followStatus'] = self.api.show_friendship(target_screen_name=user)[1].followed_by
+					try:
+						potential_influencers[user]['followStatus'] = self.api.show_friendship(target_screen_name=user)[1].followed_by
+					except: 
+						potential_influencers[user]['followStatus'] = False
 				leftover.pop(user, None)
 
 				count += 1
